@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32811.315
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzSolutionManager", "AzSolutionManager\AzSolutionManager.csproj", "{8B5FF5C6-76DA-45EE-8044-D73F87B0F2CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzSolutionManager.Tests", "AzSolutionManager.Tests\AzSolutionManager.Tests.csproj", "{C5976037-0717-4800-A539-3888525039A0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8B5FF5C6-76DA-45EE-8044-D73F87B0F2CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B5FF5C6-76DA-45EE-8044-D73F87B0F2CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B5FF5C6-76DA-45EE-8044-D73F87B0F2CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B5FF5C6-76DA-45EE-8044-D73F87B0F2CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5976037-0717-4800-A539-3888525039A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5976037-0717-4800-A539-3888525039A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5976037-0717-4800-A539-3888525039A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5976037-0717-4800-A539-3888525039A0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {122297C8-397B-4687-AB92-DAADD3AAF6C7}
+	EndGlobalSection
+EndGlobal

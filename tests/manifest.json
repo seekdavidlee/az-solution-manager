@@ -1,0 +1,79 @@
+{
+  "version": "0.1.0",
+  "unique-resource-variables": {
+    "sharedres": [
+      {
+        "asm-resource-id": "shared-storage",
+        "resource-type": "Microsoft.Storage/storageAccounts"
+      }
+    ],
+    "vnetprires": [
+      {
+        "asm-resource-id": "vnet-pri",
+        "resource-type": "Microsoft.Network/virtualNetworks"
+      }
+    ],
+    "vnetdrres": [
+      {
+        "asm-resource-id": "vnet-dr",
+        "resource-type": "Microsoft.Network/virtualNetworks"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "resource-group-name": "test-networking-prod-pri",
+      "unique-resources-variable-key": "vnetprires",
+      "asm-solution-id": "networking",
+      "asm-environment": "prod",
+      "asm-region": "pri"
+    },
+    {
+      "resource-group-name": "test-networking-prod-dr",
+      "unique-resources-variable-key": "vnetdrres",
+      "asm-solution-id": "networking",
+      "asm-environment": "prod",
+      "asm-region": "dr"
+    },
+    {
+      "resource-group-name": "test-networking-dev-pri",
+      "unique-resources-variable-key": "vnetprires",
+      "asm-solution-id": "networking",
+      "asm-environment": "dev",
+      "asm-region": "pri"
+    },
+    {
+      "resource-group-name": "test-networking-dev-dr",
+      "unique-resources-variable-key": "vnetdrres",
+      "asm-solution-id": "networking",
+      "asm-environment": "dev",
+      "asm-region": "dr"
+    },
+    {
+      "resource-group-name": "test-shared-services-dev",
+      "unique-resources-variable-key": "sharedres",
+      "asm-solution-id": "shared1",
+      "asm-environment": "dev",
+      "asm-region": "pri"
+    },
+    {
+      "resource-group-name": "test-shared-services-prod",
+      "unique-resources-variable-key": "sharedres",
+      "asm-solution-id": "shared1",
+      "asm-environment": "prod",
+      "asm-region": "pri"
+    },
+    {
+      "resource-group-name": "test-microservice1-dev",
+      "asm-solution-id": "someapp1",
+      "asm-environment": "dev",
+      "asm-region": "pri"
+    },
+    {
+      "resource-group-name": "test-microservice2-dev",
+      "asm-solution-id": "someapp2",
+      "asm-environment": "dev",
+      "asm-region": "pri"
+    }
+  ]
+}

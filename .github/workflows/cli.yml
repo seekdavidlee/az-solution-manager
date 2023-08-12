@@ -1,0 +1,67 @@
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+env:
+  CLI_VERSION: '0.1.0-beta'
+
+jobs:
+  setup:
+    name: Choose Secrets Environment Job
+    runs-on: windows-latest
+    steps:
+      - id: setup
+        name: Setup Environment Setp
+        run: |
+          if ('${{ github.ref }}' -eq 'refs/heads/main') { 
+            echo "build_env=prod" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "build_env=dev"  >> $env:GITHUB_OUTPUT
+          }
+    outputs:
+      build_env: ${{ steps.setup.outputs.build_env }}
+
+  testdeploy_cli:
+    name: Test (and optionally deploy) CLI
+    needs: setup
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET 7
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
+      - id: unittests
+        name: Unit Tests
+        run: |
+          $unitTestFilePath = "\TestResults\unittests.xml"
+          Push-Location .\src\AzSolutionManager.Tests\
+          dotnet test --logger "junit;LogFilePath=$unitTestFilePath"
+
+      - name: Publish test results
+        if: ${{ always() }}
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        with:
+          files: /TestResults/*.xml
+
+      - name: Deploy package
+        id: deploypackage
+        if: ${{ needs.setup.outputs.build_env == 'prod' }}        
+        run: |
+          Push-Location .\src\AzSolutionManager
+          $buildVersion = "${{ env.CLI_VERSION }}".Replace("-beta", "")
+          dotnet pack -p:PackageVersion=${{ env.CLI_VERSION }} -p:Version=$buildVersion -c Release -o .\
+          $currentDir = (Get-Location).Path
+          $filePath = "$currentDir\AzSolutionManager.${{ env.CLI_VERSION }}.nupkg"
+          dotnet nuget push $filePath --api-key ${{ secrets.NUGETAPIKEY }} --source https://api.nuget.org/v3/index.json
+          echo "nupkgpath=$filePath"  >> $env:GITHUB_OUTPUT
+
+      - name: Archive package
+        if: ${{ needs.setup.outputs.build_env == 'prod' }}      
+        uses: actions/upload-artifact@v3
+        with:
+          name: nuget-package
+          path: |
+            ${{ steps.deploypackage.outputs.nupkgpath }}

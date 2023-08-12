@@ -1,0 +1,19 @@
+{
+    "version": "0.1.0",
+    "unique-resource-variables": {
+        "resources1": [
+            {
+                "asm-resource-id": "app-keyvault",
+                "resource-type": "Microsoft.KeyVault/vaults"
+            }
+        ]
+    },
+    "groups": [
+        {
+            "resource-group-name": "tokenreplacementtest-@(asm.Environment)",
+            "unique-resources-variable-key": "resources1",
+            "asm-solution-id": "tokenreplacementtest",
+            "asm-environment": "@(asm.Environment)"
+        }
+    ]
+}

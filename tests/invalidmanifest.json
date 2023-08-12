@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "groups": [
+    {
+      "unique-resources-variable-key": "vnetprires",
+      "asm-solution-id": "networking",
+      "asm-environment": "prod",
+      "asm-region": "pri"
+    }
+  ]
+}

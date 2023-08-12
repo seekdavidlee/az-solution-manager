@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ToolCommandName>asm</ToolCommandName>
+    <PackAsTool>true</PackAsTool>
+    <Authors>Eng Keong David Lee</Authors>
+    <Company>Eng Keong David Lee</Company>
+    <PackageId>AzSolutionManager</PackageId>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Description>Az Solution Manager is a CLI tool to help streamline application deployments in your Azure Subscription.</Description>
+    <PackageProjectUrl>https://github.com/seekdavidlee/az-solution-manager</PackageProjectUrl>    
+    <PackageTags>DevOps,Pipeline,GitHub Actions,GitHub Workflow,Azure DevOps Pipeline</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/seekdavidlee/az-solution-manager</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+	<None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>	
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.9.0" />
+    <PackageReference Include="Azure.ResourceManager" Version="1.7.0" />
+    <PackageReference Include="Azure.ResourceManager.Authorization" Version="1.0.1" />
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="FastMember" Version="1.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

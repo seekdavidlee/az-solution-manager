@@ -1,0 +1,7 @@
+{
+    "parameters": {
+        "storageName": "@asm-resource-id:shared-storage"        
+    },
+    "solutionId": "shared1",
+    "environment": "dev"
+}
