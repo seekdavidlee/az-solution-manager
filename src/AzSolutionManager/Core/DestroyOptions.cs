@@ -16,12 +16,12 @@ public class DestroyOptions : BaseOptions
     {
         if (ASMSolutionId is null)
         {
-            throw new Exception("asmSolutionId cannot be null.");
+            throw new UserException("Missing --asm-sol");
         }
 
         if (ASMEnvironment is null)
         {
-            throw new Exception("asmEnvironment cannot be null.");
+            throw new UserException("Missing --asm-env");
         }
 
         var svc = serviceProvider.GetRequiredService<AzurePolicyGenerator>();
