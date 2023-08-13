@@ -1,9 +1,4 @@
 ﻿{
-	"resource-group-location": "centralus",
-	"managed-identity": {
-		"resource-group-name": "asm",
-		"name": "platform-managed-identity"
-	},
 	"version": "0.1.0",
 	"groups": [
 		{

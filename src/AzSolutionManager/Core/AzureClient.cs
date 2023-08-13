@@ -545,4 +545,10 @@ public class AzureClient : IAzureClient
 
 		return default;
 	}
+
+	public ResourceGroupResource[]? GetSolutions()
+	{
+		var resourceGroups = subscriptionResource.GetResourceGroups().GetAll(filter: $"tagName eq '{Constants.AsmInternalSolutionId}' and tagValue eq '{GetASMInternalSolutionIdValue()}'");
+		return resourceGroups.ToArray();
+	}
 }

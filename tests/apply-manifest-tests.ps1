@@ -202,10 +202,20 @@ if ($actualEnvName -ne $envName) {
     throw "Expected $envName but got $actualEnvName"
 }
 
+$json = dotnet run -- list --devtest --logging Debug
+if ($LastExitCode -ne 0) {
+    throw "An error has occured while listing all solutions!"
+}
+
+$allSolutions = $json | ConvertFrom-Json
+if (!$allSolutions -or $allSolutions.Length -ne 9) {
+    throw "Insufficent solutions listed! Solutions: $allSolutions"
+}
+
 $solutionId = "shared1"
 dotnet run -- destroy --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
 if ($LastExitCode -ne 0) {
-    throw "An error has occured!"
+    throw "An error has occured while running destroy operation!"
 }
 
 $json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
