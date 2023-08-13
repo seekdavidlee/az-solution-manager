@@ -1,5 +1,5 @@
 # Introduction
-Az Solution Manager streamlines management of solution resources in your Azure Subscription.
+Az Solution Manager streamlines the management of solutions in your Azure Subscription. You can think of a solution as a grouping of Azure Resource Groups and Resources that your application depends on. A solution can also be hosted in different environments - dev, prod, stage etc as well as in different regions - central us, west us, east us etc.
 
 Az Solution Manager creates references to mark resource groups and resources as part of a solution you define - even if they do not exist yet. During deployment time, if you need reference marked resource groups and resources of a solution, such as for getting Resource Id, Resource Name or Resource Group Name, you can use Az Solution Manager to pull them. For example, you may need to know an Azure Continer Registry (ACR) name during deployment so you pull container image from. Rather than hardcoding the ACR name as part of your deployment variable, you can use Az Solution Manager to pull that out.
 
@@ -17,6 +17,21 @@ Now, we are ready to apply the manifest on your Azure Subscription. The manifest
 
 ```bash
 asm apply -f manifest.json
+```
+
+You can list all solutions hosted in your Azure Subscription.
+
+```bash
+asm list
+```
+
+You can generate deployment parameter values based on a deployment parameters file where you can leverage built-in functions to do lookup with.
+
+```powershell
+$p = asm deployment-parameters -f $file
+$json = $p | ConvertTo-Json -Compress
+$json = $json.Replace('"', '\"')
+az deployment group create --resource-group $resourceGroupName --template-file deploy.bicep --parameters $json
 ```
 
 To remove the solution, use the destroy flag.
