@@ -1,5 +1,7 @@
 ﻿using Azure.ResourceManager.Resources;
 using AzSolutionManager.Core;
+using Microsoft.Extensions.Logging;
+using System;
 
 namespace AzSolutionManager.Lookup;
 
@@ -7,11 +9,13 @@ public class LookupClient
 {
 	private readonly IAzureClient azureClient;
 	private readonly IOneTimeOutWriter oneTimeOutWriter;
+	private readonly ILogger<LookupClient> logger;
 
-	public LookupClient(IAzureClient azureClient, IOneTimeOutWriter oneTimeOutWriter)
+	public LookupClient(IAzureClient azureClient, IOneTimeOutWriter oneTimeOutWriter, ILogger<LookupClient> logger)
 	{
 		this.azureClient = azureClient;
 		this.oneTimeOutWriter = oneTimeOutWriter;
+		this.logger = logger;
 	}
 
 	public bool TryGetByResourceType(string solutionId, string environment, string resourceType, string? region)
@@ -25,6 +29,9 @@ public class LookupClient
 				groupName: res.GetGroupName())).ToArray());
 			return true;
 		}
+
+		logger.LogWarning("Resource [{resourceType},{solutionId},{environment},{region}] cannot be found.",
+			resourceType, solutionId, environment, region is null ? "NoSet" : region);
 
 		return false;
 	}
@@ -41,6 +48,9 @@ public class LookupClient
 			return true;
 		}
 
+		logger.LogWarning("Group [{solutionId},{environment},{region}] cannot be found.",
+			solutionId, environment, region is null ? "NoSet" : region);
+
 		return false;
 	}
 
@@ -53,6 +63,7 @@ public class LookupClient
 			return true;
 		}
 
+		logger.LogWarning("Resource [{resourceId}] cannot be found.", resourceId);
 		return false;
 	}
 
@@ -110,6 +121,7 @@ public class LookupClient
 			return true;
 		}
 
+		logger.LogWarning("Resource [{resourceId}] cannot be found in group [{group}]", resourceId, group.Data.Name);
 		return false;
 	}
 
