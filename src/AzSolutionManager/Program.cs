@@ -1,6 +1,7 @@
 ﻿using AzSolutionManager.Authorization;
 using AzSolutionManager.Core;
 using AzSolutionManager.Deployment;
+using AzSolutionManager.List;
 using AzSolutionManager.Lookup;
 using CommandLine;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +26,7 @@ public partial class Program
 		static int destroyOptions(DestroyOptions options) => options.Run(SetupDependencyInjection(options));
 		static int destroyAllOptions(DestroyAllOptions options) => options.Run(SetupDependencyInjection(options));
 		static int roleAssignmentOptions(RoleAssignmentOptions options) => options.Run(SetupDependencyInjection(options));
+		static int listSolutionOptions(ListSolutionOptions options) => options.Run(SetupDependencyInjection(options));
 
 		static int handleErrors(IEnumerable<Error> errors)
 		{
@@ -48,7 +50,8 @@ public partial class Program
 			ApplyManifestOptions,
 			DestroyOptions,
 			DestroyAllOptions,
-			RoleAssignmentOptions>(args).MapResult(
+			RoleAssignmentOptions,
+			ListSolutionOptions>(args).MapResult(
 			(Func<InitOptions, int>)initOptions,
 			(Func<DeploymentParametersOptions, int>)deploymentParametersOptions,
 			(Func<LookupOptions, int>)lookupOptions,
@@ -56,6 +59,7 @@ public partial class Program
 			(Func<DestroyOptions, int>)destroyOptions,
 			(Func<DestroyAllOptions, int>)destroyAllOptions,
 			(Func<RoleAssignmentOptions, int>)roleAssignmentOptions,
+			(Func<ListSolutionOptions, int>)listSolutionOptions,
 			handleErrors);
 	}
 
@@ -109,6 +113,7 @@ public partial class Program
 		services.AddSingleton<ParameterClient>();
 		services.AddSingleton<ManifestTokenLookup>();
 		services.AddSingleton<RoleAssignmentClient>();
+		services.AddSingleton<ListSolutionClient>();
 		services.AddLogging(cfg =>
 		{
 			cfg.ClearProviders();

@@ -1,7 +1,7 @@
 # Introduction
 Az Solution Manager streamlines management of solution resources in your Azure Subscription.
 
-Az Solution Manager creates references to mark resource groups and resources even if they do not exist yet. During deployment time, if you need reference the marked resource groups and resources, such as for getting Resource Id, Resource Name or Resource Group Name, you can use Az Solution Manager to pull them. For example, you may need to know an Azure Continer Registry (ACR) name during deployment so you pull container image from. Rather than hardcoding the ACR name as part of your deployment variable, you can use Az Solution Manager to pull that out.
+Az Solution Manager creates references to mark resource groups and resources as part of a solution you define - even if they do not exist yet. During deployment time, if you need reference marked resource groups and resources of a solution, such as for getting Resource Id, Resource Name or Resource Group Name, you can use Az Solution Manager to pull them. For example, you may need to know an Azure Continer Registry (ACR) name during deployment so you pull container image from. Rather than hardcoding the ACR name as part of your deployment variable, you can use Az Solution Manager to pull that out.
 
 ## Getting Started
 
