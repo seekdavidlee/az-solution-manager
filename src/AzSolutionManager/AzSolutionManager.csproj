@@ -11,7 +11,7 @@
     <Company>Eng Keong David Lee</Company>
     <PackageId>AzSolutionManager</PackageId>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <Description>Az Solution Manager is a CLI tool to help streamline application deployments in your Azure Subscription.</Description>
+    <Description>Az Solution Manager streamlines management of solution resources in your Azure Subscription.</Description>
     <PackageProjectUrl>https://github.com/seekdavidlee/az-solution-manager</PackageProjectUrl>    
     <PackageTags>DevOps,Pipeline,GitHub Actions,GitHub Workflow,Azure DevOps Pipeline</PackageTags>
     <RepositoryType>git</RepositoryType>

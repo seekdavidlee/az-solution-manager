@@ -20,7 +20,7 @@ public class LookupOptions : BaseOptions
 
 	protected override void RunOperation(ServiceProvider serviceProvider)
 	{
-		var lookupClient = serviceProvider.GetRequiredService<LookupClient>();
+		var lookupClient = serviceProvider.GetRequiredService<ILookupClient>();
 		if (LookupType is null)
 		{
 			throw new Exception("LookupType cannot be null.");

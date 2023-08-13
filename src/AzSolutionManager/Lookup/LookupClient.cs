@@ -1,11 +1,10 @@
 ﻿using Azure.ResourceManager.Resources;
 using AzSolutionManager.Core;
 using Microsoft.Extensions.Logging;
-using System;
 
 namespace AzSolutionManager.Lookup;
 
-public class LookupClient
+public class LookupClient : ILookupClient
 {
 	private readonly IAzureClient azureClient;
 	private readonly IOneTimeOutWriter oneTimeOutWriter;
@@ -34,6 +33,17 @@ public class LookupClient
 			resourceType, solutionId, environment, region is null ? "NoSet" : region);
 
 		return false;
+	}
+
+	public string? GetNameByResourceType(string solutionId, string environment, string resourceType, string? region)
+	{
+		var resources = azureClient.GetResources(solutionId, environment, resourceType, region);
+		if (resources is not null && resources.Length == 1)
+		{
+			return resources.Single().Data.Name;
+		}
+
+		return default;
 	}
 
 	public bool TryGetGroup(string solutionId, string environment, string? region)
@@ -100,9 +110,11 @@ public class LookupClient
 		return default;
 	}
 
-	public string? GetUniqueName(string solutionId, string environment, string resourceId)
+	public string? GetUniqueName(string solutionId, string environment, string resourceId, string? region)
 	{
-		var group = azureClient.GetResourceGroup(solutionId, environment);
+		var group = region is not null ?
+			azureClient.GetResourceGroup(solutionId, environment, region) :
+			azureClient.GetResourceGroup(solutionId, environment);
 		if (group is not null)
 		{
 			return GetName(group, resourceId);

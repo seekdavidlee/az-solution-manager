@@ -1,45 +1,44 @@
-﻿using AzSolutionManager.Core;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace AzSolutionManager.Deployment;
 
-public class ParameterDefinationLoader
+public class ParameterDefinationLoader : IParameterDefinationLoader
 {
-    private readonly DeploymentParametersOptions options;
+	private readonly DeploymentParametersOptions options;
 
-    public ParameterDefinationLoader(DeploymentParametersOptions options)
-    {
-        this.options = options;
-    }
+	public ParameterDefinationLoader(DeploymentParametersOptions options)
+	{
+		this.options = options;
+	}
 
-    private ParameterDefination? parameterDefination;
+	private ParameterDefination? parameterDefination;
 
-    public ParameterDefination Get()
-    {
-        if (parameterDefination is not null)
-        {
-            return parameterDefination;
-        }
+	public ParameterDefination Get()
+	{
+		if (parameterDefination is not null)
+		{
+			return parameterDefination;
+		}
 
-        if (options.FilePath is null)
-        {
-            throw new Exception("Filepath is required.");
-        }
+		if (options.FilePath is null)
+		{
+			throw new Exception("Filepath is required.");
+		}
 
-        string content = File.ReadAllText(options.FilePath);
+		string content = File.ReadAllText(options.FilePath);
 
-        if (string.IsNullOrEmpty(content))
-        {
-            throw new Exception("Unexpected for manifest content to be empty.");
-        }
+		if (string.IsNullOrEmpty(content))
+		{
+			throw new Exception("Unexpected for manifest content to be empty.");
+		}
 
-        var d = JsonSerializer.Deserialize<ParameterDefination>(content);
-        if (d is null)
-        {
-            throw new Exception("Unexpected for manifest null.");
-        }
+		var d = JsonSerializer.Deserialize<ParameterDefination>(content);
+		if (d is null)
+		{
+			throw new Exception("Unexpected for manifest null.");
+		}
 
-        parameterDefination = d;
-        return parameterDefination;
-    }
+		parameterDefination = d;
+		return parameterDefination;
+	}
 }

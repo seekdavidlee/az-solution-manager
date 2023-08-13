@@ -9,8 +9,6 @@ using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Config;
 using NLog.Extensions.Logging;
-using NLog.LayoutRenderers;
-using NLog.Layouts;
 using NLog.Targets;
 using LogLevel = NLog.LogLevel;
 
@@ -103,11 +101,11 @@ public partial class Program
 		services.AddSingleton(options);
 		services.AddSingleton((IBaseOptions)options);
 		services.AddSingleton<AzurePolicyGenerator>();
-		services.AddSingleton<LookupClient>();
+		services.AddSingleton<ILookupClient, LookupClient>();
 		services.AddSingleton<IOneTimeOutWriter, OneTimeOutWriter>();
 		services.AddSingleton<IAzureClient, AzureClient>();
 		services.AddSingleton<ManifestLoader>();
-		services.AddSingleton<ParameterDefinationLoader>();
+		services.AddSingleton<IParameterDefinationLoader, ParameterDefinationLoader>();
 		services.AddSingleton<ParameterClient>();
 		services.AddSingleton<ManifestTokenLookup>();
 		services.AddSingleton<RoleAssignmentClient>();
