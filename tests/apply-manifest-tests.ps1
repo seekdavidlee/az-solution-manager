@@ -16,7 +16,7 @@ else {
     Write-Host "Applying manifest without init throws an exception passed!" -ForegroundColor Green
 }
 
-dotnet run -- init -g asmdevtest -m asm-managed-identity -l centralus --devtest
+dotnet run -- init -g asmdevtest -m asm-managed-identity -l centralus --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "Unable to initalize subscription!"
 }
@@ -24,7 +24,7 @@ else {
     Write-Host "Initialization passed!" -ForegroundColor Green
 }
 
-dotnet run -- apply -f $manifestPath --devtest
+dotnet run -- apply -f $manifestPath --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "Unable to apply $manifestPath!"
 }
@@ -70,7 +70,7 @@ $manifestObj.groups | ForEach-Object {
 
     Write-Host "Testing group lookup for $rgName"
 
-    $json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --asm-reg $region --devtest
+    $json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --asm-reg $region --devtest --logging Debug
     if ($LastExitCode -ne 0) {
         throw "Error with group lookup."
     }
@@ -88,7 +88,7 @@ $manifestObj.groups | ForEach-Object {
     if ($solutionId -eq "shared1") {
 
         # Test assignments
-        dotnet run -- role-assignment --role-name $roleName --principal-id $principalId --principal-type $principalType --asm-sol $solutionId --asm-env $envName --devtest
+        dotnet run -- role-assignment --role-name $roleName --principal-id $principalId --principal-type $principalType --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
         if ($LastExitCode -ne 0) {
             throw "Error assigning role $roleName!"
         }
@@ -104,7 +104,7 @@ $manifestObj.groups | ForEach-Object {
         $file = "$location\deploy-shared.bicep.$envName.json"
         Write-Host "Testing $file"
 
-        $json = dotnet run -- deployment-parameters -f $file --devtest
+        $json = dotnet run -- deployment-parameters -f $file --devtest --logging Debug
         if ($LastExitCode -ne 0) {
             throw "Error processing $file. $json"
         }
@@ -125,7 +125,7 @@ $manifestObj.groups | ForEach-Object {
             throw "Error running deployment for $objName."
         }
 
-        $json = dotnet run -- lookup --type resource --asm-rid "shared-storage" --asm-sol $solutionId --asm-env $envName --devtest
+        $json = dotnet run -- lookup --type resource --asm-rid "shared-storage" --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
         if ($LastExitCode -ne 0) {
             throw "Error with resource lookup."
         }
@@ -143,7 +143,7 @@ $manifestObj.groups | ForEach-Object {
             throw "Error running deployment for $objName."
         }
 
-        $json = dotnet run -- lookup --type resource-type --type-name "Microsoft.Storage/storageAccounts" --asm-sol $solutionId --asm-env $envName --devtest
+        $json = dotnet run -- lookup --type resource-type --type-name "Microsoft.Storage/storageAccounts" --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
         if ($LastExitCode -ne 0) {
             throw "Error with resource lookup."
         }
@@ -175,12 +175,12 @@ $manifestObj.groups | ForEach-Object {
 
 $envName = "dev"
 $solutionId = "tokenreplacementtest"
-dotnet run -- apply -f $manifestWithToken --asm-env $envName --devtest
+dotnet run -- apply -f $manifestWithToken --asm-env $envName --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "Unable to apply $manifestWithToken!"
 }
 
-$json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --devtest
+$json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "Error with group lookup."
 }
@@ -203,12 +203,12 @@ if ($actualEnvName -ne $envName) {
 }
 
 $solutionId = "shared1"
-dotnet run -- destroy --asm-sol $solutionId --asm-env $envName --devtest
+dotnet run -- destroy --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "An error has occured!"
 }
 
-$json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --devtest
+$json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "Error with group lookup [$solutionId, $envName]."
 }
@@ -217,7 +217,7 @@ if ($null -ne $json) {
     throw "Expected json to be null be it was $json"
 }
 
-dotnet run -- destroy-all --devtest
+dotnet run -- destroy-all --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "An error has occured!"
 }

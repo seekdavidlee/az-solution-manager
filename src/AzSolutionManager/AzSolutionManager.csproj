@@ -38,10 +38,4 @@
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

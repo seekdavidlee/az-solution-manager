@@ -37,6 +37,9 @@ public abstract class BaseOptions : IBaseOptions
 	[Option("asm-rid", HelpText = "asm resource Id value.")]
 	public string? ASMResourceId { get; set; }
 
+	[Option("logging", HelpText = "Logging levels: Trace, Debug, Info, Warn, Error")]
+	public string? LoggingLevel { get; set; } = "Error";
+
 #if DEBUG
 	[Option("devtest")]
 	public bool DevTest { get; set; }

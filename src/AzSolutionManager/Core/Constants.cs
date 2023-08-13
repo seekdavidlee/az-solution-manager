@@ -11,7 +11,7 @@ public static class Constants
 	public const string AsmInternalManagedIdentityResourceIdValue = "asm-internal-managed-identity";
 
 	public const string AsmResourceId = "asm-resource-id";
-	public const string AsmCategory = "Azure Resource Discovery";
+	public const string AsmCategory = "Az Solution Manager";
 	public const string AsmInternalSolutionId = "asm-internal-solution-id";
 	public const string AsmInternalResourceId = "asm-internal-resource-id";
 	public const string AsmSolutionId = "asm-solution-id";
