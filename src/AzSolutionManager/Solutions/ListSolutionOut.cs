@@ -1,4 +1,4 @@
-﻿namespace AzSolutionManager.List;
+﻿namespace AzSolutionManager.Solutions;
 
 public class ListSolutionOut
 {

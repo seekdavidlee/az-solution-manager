@@ -1,12 +1,12 @@
 ﻿using System.Text.Json;
 
-namespace AzSolutionManager.Core;
+namespace AzSolutionManager.Manifests;
 
 public class ManifestLoader
 {
-    private readonly ApplyManifestOptions options;
+    private readonly ManifestOptions options;
 
-    public ManifestLoader(ApplyManifestOptions options)
+    public ManifestLoader(ManifestOptions options)
     {
         this.options = options;
     }
@@ -33,7 +33,7 @@ public class ManifestLoader
         }
 
         var m = JsonSerializer.Deserialize<Manifest>(content) ?? throw new Exception("Unexpected for manifest null.");
-		m.Validate();
+        m.Validate();
 
         manifest = m;
         return manifest;

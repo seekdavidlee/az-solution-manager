@@ -4,20 +4,37 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AzSolutionManager.Deployment;
 
-[Verb("deployment-parameters", HelpText = "Generate parameters used in bicep/ARM deployment. This is used with filepath parameter.")]
+[Verb("deployment", HelpText = "Helper function(s) to ARM/Bicep deployments in managed solutions.")]
 public class DeploymentParametersOptions : BaseOptions
 {
-    [Option('f', "filepath", HelpText = "File path to deployment parameters file")]
-    public string? FilePath { get; set; }
+	[Value(0, HelpText = "Valid option(s): parameters")]
+	public string? Value { get; set; }
 
-    protected override string GetOperationName()
-    {
-        return "Generate deployment parameters";
-    }
+	[Option('f', "filepath", HelpText = "File path to deployment parameters file")]
+	public string? FilePath { get; set; }
 
-    protected override void RunOperation(ServiceProvider serviceProvider)
-    {
-        var svc = serviceProvider.GetRequiredService<ParameterClient>();
-        svc.CreateDeploymentParameters();
-    }
+	private const string operationName = "Deployment";
+
+	protected override string GetOperationName()
+	{
+		return operationName;
+	}
+
+	protected override void RunOperation(ServiceProvider serviceProvider)
+	{
+		var verb = this.Value;
+		if (verb is null)
+		{
+			throw new UserException("Missing option input.");
+		}
+
+		if (verb == "parameters")
+		{
+			var svc = serviceProvider.GetRequiredService<ParameterClient>();
+			svc.CreateDeploymentParameters();
+			return;
+		}
+
+		throw new UserException($"Option '{verb}' is invalid.");
+	}
 }

@@ -7,26 +7,30 @@ namespace AzSolutionManager.Lookup;
 [Verb("lookup", HelpText = "Lookup resource or group.")]
 public class LookupOptions : BaseOptions
 {
-	[Option("type", Required = true, HelpText = "'group', 'resource' or 'resource-type'")]
-	public string? LookupType { get; set; }
+	[Value(0, HelpText = "Valid option(s): group, resource, resource-type")]
+	public string? Value { get; set; }
 
 	[Option("type-name", Required = false, HelpText = "The type name of resource.")]
 	public string? ResourceType { get; set; }
 
+	private const string operationName = "Lookup";
+
 	protected override string GetOperationName()
 	{
-		return "Lookup";
+		return operationName;
 	}
 
 	protected override void RunOperation(ServiceProvider serviceProvider)
 	{
-		var lookupClient = serviceProvider.GetRequiredService<ILookupClient>();
-		if (LookupType is null)
+		var verb = this.Value;
+		if (verb is null)
 		{
-			throw new Exception("LookupType cannot be null.");
+			throw new UserException("Missing option input.");
 		}
 
-		if (LookupType == Constants.LookupResource)
+		var lookupClient = serviceProvider.GetRequiredService<ILookupClient>();
+
+		if (verb == Constants.LookupResource)
 		{
 			if (ASMResourceId is null)
 			{
@@ -49,7 +53,7 @@ public class LookupOptions : BaseOptions
 			return;
 		}
 
-		if (LookupType == Constants.LookupGroup)
+		if (verb == Constants.LookupGroup)
 		{
 			if (ASMSolutionId is null)
 			{
@@ -66,7 +70,7 @@ public class LookupOptions : BaseOptions
 			return;
 		}
 
-		if (LookupType == Constants.LookupType)
+		if (verb == Constants.LookupType)
 		{
 			if (ASMSolutionId is null)
 			{
@@ -87,5 +91,7 @@ public class LookupOptions : BaseOptions
 
 			return;
 		}
+
+		throw new UserException($"Option '{verb}' is invalid.");
 	}
 }

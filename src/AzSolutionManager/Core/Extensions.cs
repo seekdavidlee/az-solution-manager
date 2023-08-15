@@ -1,4 +1,5 @@
-﻿using Azure;
+﻿using AzSolutionManager.Manifests;
+using Azure;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Resources;
 using System.Runtime.Serialization.Formatters.Binary;

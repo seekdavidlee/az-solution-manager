@@ -1,4 +1,4 @@
-﻿using AzSolutionManager.Core;
+﻿using AzSolutionManager.Manifests;
 using System.Reflection;
 using System.Text.Json;
 

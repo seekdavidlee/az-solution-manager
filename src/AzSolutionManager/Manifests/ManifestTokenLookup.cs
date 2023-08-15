@@ -1,7 +1,8 @@
-﻿using FastMember;
+﻿using AzSolutionManager.Core;
+using FastMember;
 using System.Text;
 
-namespace AzSolutionManager.Core;
+namespace AzSolutionManager.Manifests;
 
 public class ManifestTokenLookup
 {

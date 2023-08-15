@@ -1,4 +1,5 @@
-﻿using Azure.Core;
+﻿using AzSolutionManager.Manifests;
+using Azure.Core;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Caching.Memory;

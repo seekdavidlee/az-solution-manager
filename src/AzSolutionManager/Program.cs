@@ -1,8 +1,9 @@
 ﻿using AzSolutionManager.Authorization;
 using AzSolutionManager.Core;
 using AzSolutionManager.Deployment;
-using AzSolutionManager.List;
 using AzSolutionManager.Lookup;
+using AzSolutionManager.Manifests;
+using AzSolutionManager.Solutions;
 using CommandLine;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,11 +23,10 @@ public partial class Program
 		static int initOptions(InitOptions options) => options.Run(SetupDependencyInjection(options));
 		static int deploymentParametersOptions(DeploymentParametersOptions options) => options.Run(SetupDependencyInjection(options)); ;
 		static int lookupOptions(LookupOptions options) => options.Run(SetupDependencyInjection(options));
-		static int applyManifestOptions(ApplyManifestOptions options) => options.Run(SetupDependencyInjection(options));
-		static int destroyOptions(DestroyOptions options) => options.Run(SetupDependencyInjection(options));
+		static int applyManifestOptions(ManifestOptions options) => options.Run(SetupDependencyInjection(options));
 		static int destroyAllOptions(DestroyAllOptions options) => options.Run(SetupDependencyInjection(options));
-		static int roleAssignmentOptions(RoleAssignmentOptions options) => options.Run(SetupDependencyInjection(options));
-		static int listSolutionOptions(ListSolutionOptions options) => options.Run(SetupDependencyInjection(options));
+		static int roleAssignmentOptions(RoleOptions options) => options.Run(SetupDependencyInjection(options));
+		static int listSolutionOptions(SolutionOptions options) => options.Run(SetupDependencyInjection(options));
 
 		static int handleErrors(IEnumerable<Error> errors)
 		{
@@ -35,6 +35,11 @@ public partial class Program
 			{
 				// it seems when performing --version, it shows an error which is not expected.
 				if (er.Tag == ErrorType.VersionRequestedError)
+				{
+					continue;
+				}
+
+				if (er.Tag == ErrorType.HelpVerbRequestedError)
 				{
 					continue;
 				}
@@ -47,19 +52,17 @@ public partial class Program
 		return Parser.Default.ParseArguments<InitOptions,
 			DeploymentParametersOptions,
 			LookupOptions,
-			ApplyManifestOptions,
-			DestroyOptions,
+			ManifestOptions,
 			DestroyAllOptions,
-			RoleAssignmentOptions,
-			ListSolutionOptions>(args).MapResult(
+			RoleOptions,
+			SolutionOptions>(args).MapResult(
 			(Func<InitOptions, int>)initOptions,
 			(Func<DeploymentParametersOptions, int>)deploymentParametersOptions,
 			(Func<LookupOptions, int>)lookupOptions,
-			(Func<ApplyManifestOptions, int>)applyManifestOptions,
-			(Func<DestroyOptions, int>)destroyOptions,
+			(Func<ManifestOptions, int>)applyManifestOptions,
 			(Func<DestroyAllOptions, int>)destroyAllOptions,
-			(Func<RoleAssignmentOptions, int>)roleAssignmentOptions,
-			(Func<ListSolutionOptions, int>)listSolutionOptions,
+			(Func<RoleOptions, int>)roleAssignmentOptions,
+			(Func<SolutionOptions, int>)listSolutionOptions,
 			handleErrors);
 	}
 
@@ -113,7 +116,7 @@ public partial class Program
 		services.AddSingleton<ParameterClient>();
 		services.AddSingleton<ManifestTokenLookup>();
 		services.AddSingleton<RoleAssignmentClient>();
-		services.AddSingleton<ListSolutionClient>();
+		services.AddSingleton<SolutionClient>();
 		services.AddLogging(cfg =>
 		{
 			cfg.ClearProviders();
