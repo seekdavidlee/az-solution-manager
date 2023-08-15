@@ -3,12 +3,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AzSolutionManager.Core;
 
-[Verb("destroy-all", HelpText = "Destroy ASM and all solutions.")]
+[Verb("destroy", HelpText = "Destroy ASM infrastructure and all solutions.")]
 public class DestroyAllOptions : BaseOptions
 {
-    protected override string GetOperationName()
+	private const string operationName = "Destroy";
+
+	protected override string GetOperationName()
     {
-        return "Destroy ASM";
+        return operationName;
     }
 
     protected override void RunOperation(ServiceProvider serviceProvider)

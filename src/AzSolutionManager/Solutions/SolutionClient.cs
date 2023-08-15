@@ -1,22 +1,22 @@
 ﻿using AzSolutionManager.Core;
 using Microsoft.Extensions.Logging;
 
-namespace AzSolutionManager.List;
+namespace AzSolutionManager.Solutions;
 
-public class ListSolutionClient
+public class SolutionClient
 {
 	private readonly IOneTimeOutWriter oneTimeOutWriter;
 	private readonly IAzureClient azureClient;
-	private readonly ILogger<ListSolutionClient> logger;
+	private readonly ILogger<SolutionClient> logger;
 
-	public ListSolutionClient(IOneTimeOutWriter oneTimeOutWriter, IAzureClient azureClient, ILogger<ListSolutionClient> logger)
+	public SolutionClient(IOneTimeOutWriter oneTimeOutWriter, IAzureClient azureClient, ILogger<SolutionClient> logger)
 	{
 		this.oneTimeOutWriter = oneTimeOutWriter;
 		this.azureClient = azureClient;
 		this.logger = logger;
 	}
 
-	public void GetSolutions(string? region, string? environment)
+	public void ListSolutions(string? region, string? environment)
 	{
 		var solutions = azureClient.GetSolutions();
 		if (solutions is not null && solutions.Length > 0)

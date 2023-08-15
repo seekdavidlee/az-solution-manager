@@ -10,7 +10,7 @@ public abstract class BaseOptions : IBaseOptions
 	[Option('t', "tenant", HelpText = "Tenant Name or Id.")]
 	public string? Tenant { get; set; }
 
-	[Option('s', "subscription", HelpText = "Subscription Name or Id.")]
+	[Option('s', "subscription", HelpText = "Azure Subscription Name or Id.")]
 	public string? Subscription { get; set; }
 
 	/// <summary>

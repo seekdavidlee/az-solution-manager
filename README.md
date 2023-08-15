@@ -16,28 +16,44 @@ asm init --resource-group-name asm --location centralus --managed-identity asm-i
 Now, we are ready to apply the manifest on your Azure Subscription. The manifest contains your solution definations.
 
 ```bash
-asm apply -f manifest.json
+asm manifest apply -f manifest.json
 ```
 
-You can list all solutions hosted in your Azure Subscription.
+You can list all solutions hosted in your Azure Subscription with the solution command.
 
 ```bash
-asm list
+asm solution list
 ```
 
 You can generate deployment parameter values based on a deployment parameters file where you can leverage built-in functions to do lookup with.
 
 ```powershell
-$p = asm deployment-parameters -f $file
+$p = asm deployment parameters -f $file
 $json = $p | ConvertTo-Json -Compress
 $json = $json.Replace('"', '\"')
 az deployment group create --resource-group $resourceGroupName --template-file deploy.bicep --parameters $json
 ```
 
-To remove the solution, use the destroy flag.
+You can lookup resource groups and resources with the lookup command.
+
+```
+asm lookup group --asm-sol $solutionId --asm-env $envName --asm-reg $region
+```
+
+```
+asm lookup resource --asm-rid $resourceId --asm-sol $solutionId --asm-env $envName --asm-reg $region
+```
+
+You can perform role assignments with managed solution.
+
+```
+asm role assign --role-name $roleName --principal-id $principalId --principal-type $principalType --asm-sol $solutionId --asm-env $envName
+```
+
+To remove the solution, use the delete option.
 
 ```bash
-asm destroy --asm-sol mysolution --asm-env dev
+asm solution delete --asm-sol mysolution --asm-env dev
 ```
 
 ## Flags

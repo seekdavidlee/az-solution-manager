@@ -11,13 +11,23 @@ asm init --resource-group-name asm --location centralus --managed-identity asm-i
 Now, we are ready to apply the manifest on your Azure Subscription. The manifest contains your solution definations.
 
 ```bash
-asm apply -f manifest.json
+asm manifest apply -f manifest.json
 ```
 
-To remove the solution, use the destroy flag.
+You can lookup resource groups and resources with the lookup command.
+
+```
+asm lookup group --asm-sol $solutionId --asm-env $envName --asm-reg $region
+```
+
+```
+asm lookup resource --asm-rid $resourceId --asm-sol $solutionId --asm-env $envName --asm-reg $region
+```
+
+To remove the solution, use the delete option with the solution command.
 
 ```bash
-asm destroy --asm-sol mysolution --asm-env dev
+asm solution delete --asm-sol mysolution --asm-env dev
 ```
 
 ## Get Help

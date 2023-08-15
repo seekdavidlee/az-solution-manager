@@ -8,7 +8,7 @@ $manifestPath = "$location\manifest.json"
 $manifestWithToken = "$location\manifestwithtoken.json"
 
 Push-Location ..\src\AzSolutionManager
-dotnet run -- apply -f $manifestPath --devtest
+dotnet run -- manifest apply -f $manifestPath --devtest
 if ($LastExitCode -eq 0) {
     throw "Expected an error to be thrown but no error was thrown."
 }
@@ -24,7 +24,7 @@ else {
     Write-Host "Initialization passed!" -ForegroundColor Green
 }
 
-dotnet run -- apply -f $manifestPath --devtest --logging Debug
+dotnet run -- manifest apply -f $manifestPath --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "Unable to apply $manifestPath!"
 }
@@ -70,7 +70,7 @@ $manifestObj.groups | ForEach-Object {
 
     Write-Host "Testing group lookup for $rgName"
 
-    $json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --asm-reg $region --devtest --logging Debug
+    $json = dotnet run -- lookup group --asm-sol $solutionId --asm-env $envName --asm-reg $region --devtest --logging Debug
     if ($LastExitCode -ne 0) {
         throw "Error with group lookup."
     }
@@ -88,7 +88,7 @@ $manifestObj.groups | ForEach-Object {
     if ($solutionId -eq "shared1") {
 
         # Test assignments
-        dotnet run -- role-assignment --role-name $roleName --principal-id $principalId --principal-type $principalType --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
+        dotnet run -- role assign --role-name $roleName --principal-id $principalId --principal-type $principalType --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
         if ($LastExitCode -ne 0) {
             throw "Error assigning role $roleName!"
         }
@@ -104,7 +104,7 @@ $manifestObj.groups | ForEach-Object {
         $file = "$location\deploy-shared.bicep.$envName.json"
         Write-Host "Testing $file"
 
-        $json = dotnet run -- deployment-parameters -f $file --devtest --logging Debug
+        $json = dotnet run -- deployment parameters -f $file --devtest --logging Debug
         if ($LastExitCode -ne 0) {
             throw "Error processing $file. $json"
         }
@@ -125,7 +125,7 @@ $manifestObj.groups | ForEach-Object {
             throw "Error running deployment for $objName."
         }
 
-        $json = dotnet run -- lookup --type resource --asm-rid "shared-storage" --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
+        $json = dotnet run -- lookup resource --asm-rid "shared-storage" --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
         if ($LastExitCode -ne 0) {
             throw "Error with resource lookup."
         }
@@ -143,7 +143,7 @@ $manifestObj.groups | ForEach-Object {
             throw "Error running deployment for $objName."
         }
 
-        $json = dotnet run -- lookup --type resource-type --type-name "Microsoft.Storage/storageAccounts" --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
+        $json = dotnet run -- lookup resource-type --type-name "Microsoft.Storage/storageAccounts" --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
         if ($LastExitCode -ne 0) {
             throw "Error with resource lookup."
         }
@@ -175,12 +175,12 @@ $manifestObj.groups | ForEach-Object {
 
 $envName = "dev"
 $solutionId = "tokenreplacementtest"
-dotnet run -- apply -f $manifestWithToken --asm-env $envName --devtest --logging Debug
+dotnet run -- manifest apply -f $manifestWithToken --asm-env $envName --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "Unable to apply $manifestWithToken!"
 }
 
-$json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
+$json = dotnet run -- lookup group --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "Error with group lookup."
 }
@@ -202,7 +202,7 @@ if ($actualEnvName -ne $envName) {
     throw "Expected $envName but got $actualEnvName"
 }
 
-$json = dotnet run -- list --devtest --logging Debug
+$json = dotnet run -- solution list --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "An error has occured while listing all solutions!"
 }
@@ -213,12 +213,12 @@ if (!$allSolutions -or $allSolutions.Length -ne 9) {
 }
 
 $solutionId = "shared1"
-dotnet run -- destroy --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
+dotnet run -- solution delete --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "An error has occured while running destroy operation!"
 }
 
-$json = dotnet run -- lookup --type group --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
+$json = dotnet run -- lookup group --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "Error with group lookup [$solutionId, $envName]."
 }
@@ -227,7 +227,7 @@ if ($null -ne $json) {
     throw "Expected json to be null be it was $json"
 }
 
-dotnet run -- destroy-all --devtest --logging Debug
+dotnet run -- destroy --devtest --logging Debug
 if ($LastExitCode -ne 0) {
     throw "An error has occured!"
 }

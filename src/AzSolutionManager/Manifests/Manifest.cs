@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
+using AzSolutionManager.Core;
 
-namespace AzSolutionManager.Core;
+namespace AzSolutionManager.Manifests;
 
 public class Manifest
 {

@@ -1,4 +1,5 @@
 ﻿using AzSolutionManager.Core;
+using AzSolutionManager.Manifests;
 using NSubstitute;
 
 namespace AzSolutionManager.Tests;
