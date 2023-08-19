@@ -39,7 +39,7 @@ public class ParameterClientTests
 		lookupClient.GetUniqueName(d.SolutionId, d.Enviroment, "foo", null).ReturnsNull();
 		lookupClient.GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null).Returns("bar");
 
-		parameterClient.CreateDeploymentParameters();
+		parameterClient.CreateDeploymentParameters(environmentName: null);
 
 		oneTimeOutWriter.Received().Write(Arg.Is<DeploymentOut>(x =>
 		x.Parameters != null &&
@@ -63,7 +63,32 @@ public class ParameterClientTests
 
 		lookupClient.GetUniqueName(d.SolutionId, d.Enviroment, "foo", null).Returns("Soap");
 
-		parameterClient.CreateDeploymentParameters();
+		parameterClient.CreateDeploymentParameters(environmentName: null);
+
+		lookupClient.DidNotReceive().GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null);
+		oneTimeOutWriter.Received().Write(Arg.Is<DeploymentOut>(x =>
+		x.Parameters != null &&
+		x.Parameters.ContainsKey("storageName") &&
+		x.Parameters["storageName"].Value == "Soap"), false);
+	}
+
+	[TestMethod]
+	public void WithExistingResourceTaggedAndEnvironmentOverride_ReturnName()
+	{
+		var d = new ParameterDefination
+		{
+			SolutionId = "Solution1",
+			Enviroment = "dev",
+			Parameters = new Dictionary<string, string>()
+			{
+				{"storageName","@asm-resource-id:foo,@asm-resource-type:Microsoft.Storage/storageAccounts" }
+			}
+		};
+		parameterDefinationLoader.Get().Returns(d);
+
+		lookupClient.GetUniqueName(d.SolutionId, "stage", "foo", null).Returns("Soap");
+
+		parameterClient.CreateDeploymentParameters(environmentName: "stage");
 
 		lookupClient.DidNotReceive().GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null);
 		oneTimeOutWriter.Received().Write(Arg.Is<DeploymentOut>(x =>
@@ -89,7 +114,7 @@ public class ParameterClientTests
 		lookupClient.GetUniqueName(d.SolutionId, d.Enviroment, "foo", null).ReturnsNull();
 		lookupClient.GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null).ReturnsNull();
 
-		parameterClient.CreateDeploymentParameters();
+		parameterClient.CreateDeploymentParameters(environmentName: null);
 
 
 		oneTimeOutWriter.Received().Write(Arg.Is<DeploymentOut>(x =>

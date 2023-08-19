@@ -28,12 +28,7 @@ public class RoleOptions : BaseOptions
 
 	protected override void RunOperation(ServiceProvider serviceProvider)
 	{
-		var verb = this.Value;
-		if (verb is null)
-		{
-			throw new UserException("Missing option input.");
-		}
-
+		var verb = this.Value ?? throw new UserException("Missing option input.");
 		if (verb == "assign")
 		{
 			if (ASMSolutionId is null)

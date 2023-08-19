@@ -31,7 +31,7 @@ public class DeploymentParametersOptions : BaseOptions
 		if (verb == "parameters")
 		{
 			var svc = serviceProvider.GetRequiredService<ParameterClient>();
-			svc.CreateDeploymentParameters();
+			svc.CreateDeploymentParameters(this.ASMEnvironment);
 			return;
 		}
 
