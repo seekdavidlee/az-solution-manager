@@ -25,15 +25,6 @@ You can list all solutions hosted in your Azure Subscription with the solution c
 asm solution list
 ```
 
-You can generate deployment parameter values based on a deployment parameters file where you can leverage built-in functions to do lookup with.
-
-```powershell
-$p = asm deployment parameters -f $file
-$json = $p | ConvertTo-Json -Compress
-$json = $json.Replace('"', '\"')
-az deployment group create --resource-group $resourceGroupName --template-file deploy.bicep --parameters $json
-```
-
 You can lookup resource groups and resources with the lookup command.
 
 ```
@@ -79,3 +70,27 @@ The following are tags you can apply via your manifest.
 
 * Version is required. Please refer to this [documentation](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure#common-metadata-properties) for the structure used in versioning.
 * Category is not required but recommended for filtering purposes. If you do not set a category, a default category will be used.
+
+## Deployment
+
+You can generate deployment parameter values based on a deployment parameters file where you can leverage built-in functions to do lookup with.
+
+```powershell
+$p = asm deployment parameters -f $file
+$json = $p | ConvertTo-Json -Compress
+$json = $json.Replace('"', '\"')
+az deployment group create --resource-group $resourceGroupName --template-file deploy.bicep --parameters $json
+```
+
+Take the following example for creating the deployment parameters file. Assume the input parameters to your bicep is storageName. The value is selected in the order which we are able to perform a lookup using the syntax. The first lookup is with an existing resource tagged with resource id of 'my-table-db'. If it is not found, it will locate a resource of type 'Microsoft.Storage/storageAccounts' and provide the name - in case your resource has not been tagged by the Azure policy yet. You bicep should account for the fact that none of these will yield a Name and use the pattern of 'YOUR_PREFIX${uniqueString(resourceGroup().name)}' to create a resource name as an input parameter.
+
+```json
+{
+    "parameters": {
+        "storageName": "@asm-resource-id:my-table-db,@asm-resource-type:Microsoft.Storage/storageAccounts"        
+    },
+    "solutionId": "myapp",
+    "environment": "dev",
+    "compressJsonOutput": true
+}
+```

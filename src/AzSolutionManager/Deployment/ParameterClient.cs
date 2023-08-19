@@ -19,7 +19,7 @@ public class ParameterClient
 		this.parameterDefinationLoader = parameterDefinationLoader;
 	}
 
-	public void CreateDeploymentParameters()
+	public void CreateDeploymentParameters(string? environmentName)
 	{
 		var d = parameterDefinationLoader.Get();
 
@@ -30,12 +30,18 @@ public class ParameterClient
 
 		if (d.SolutionId is null)
 		{
-			throw new UserException("Missing --asm-sol");
+			throw new UserException("Missing configuring solutionId in your file.");
+		}
+
+		// Override if configured.
+		if (environmentName is not null)
+		{
+			d.Enviroment = environmentName;
 		}
 
 		if (d.Enviroment is null)
 		{
-			throw new UserException("Missing --asm-env");
+			throw new UserException("Missing configuring environment in your file.");
 		}
 
 		var deploymentOut = new DeploymentOut
