@@ -11,4 +11,6 @@ public class LookupGroupOut
     public string GroupId { get; set; }
 
     public string Name { get; set; }
+
+    public string? Component { get; set; }
 }

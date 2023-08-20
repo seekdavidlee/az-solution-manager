@@ -70,8 +70,16 @@
       "asm-region": "pri"
     },
     {
-      "resource-group-name": "test-microservice2-dev",
+      "resource-group-name": "test-microservice2app-dev",
       "asm-solution-id": "someapp2",
+      "asm-component": "app",
+      "asm-environment": "dev",
+      "asm-region": "pri"
+    },
+    {
+      "resource-group-name": "test-microservice2db-dev",
+      "asm-solution-id": "someapp2",
+      "asm-component": "database",
       "asm-environment": "dev",
       "asm-region": "pri"
     }

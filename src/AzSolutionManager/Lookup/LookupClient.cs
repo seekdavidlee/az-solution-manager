@@ -17,9 +17,9 @@ public class LookupClient : ILookupClient
 		this.logger = logger;
 	}
 
-	public bool TryGetByResourceType(string solutionId, string environment, string resourceType, string? region)
+	public bool TryGetByResourceType(string solutionId, string environment, string resourceType, string? region, string? component)
 	{
-		var resources = azureClient.GetResources(solutionId, environment, resourceType, region);
+		var resources = azureClient.GetResources(solutionId, environment, resourceType, region, component);
 		if (resources is not null && resources.Length > 0)
 		{
 			oneTimeOutWriter.Write(resources.Select(res => new LookupResourceOut(
@@ -35,9 +35,9 @@ public class LookupClient : ILookupClient
 		return false;
 	}
 
-	public string? GetNameByResourceType(string solutionId, string environment, string resourceType, string? region)
+	public string? GetNameByResourceType(string solutionId, string environment, string resourceType, string? region, string? component)
 	{
-		var resources = azureClient.GetResources(solutionId, environment, resourceType, region);
+		var resources = azureClient.GetResources(solutionId, environment, resourceType, region, component);
 		if (resources is not null && resources.Length == 1)
 		{
 			return resources.Single().Data.Name;
@@ -46,20 +46,26 @@ public class LookupClient : ILookupClient
 		return default;
 	}
 
-	public bool TryGetGroup(string solutionId, string environment, string? region)
+	public bool TryGetGroups(string solutionId, string environment, string? region, string? component)
 	{
-		var group = region is null ?
-			azureClient.GetResourceGroup(solutionId, environment) :
-			azureClient.GetResourceGroup(solutionId, environment, region);
+		var groups = azureClient.GetResourceGroups(solutionId, environment, region, component).ToArray();
 
-		if (group is not null)
+		if (groups is not null && groups.Length > 0)
 		{
-			oneTimeOutWriter.Write(new LookupGroupOut(groupId: group.Id.ToString(), name: group.Data.Name));
+			oneTimeOutWriter.Write(
+				groups.Select(x =>
+				new LookupGroupOut(
+					groupId: x.Id.ToString(),
+					name: x.Data.Name)
+				{
+					Component = x.Data.Tags.ContainsKey(Constants.AsmComponent) ? x.Data.Tags[Constants.AsmComponent] : default
+				}).ToArray());
+
 			return true;
 		}
 
-		logger.LogWarning("Group [{solutionId},{environment},{region}] cannot be found.",
-			solutionId, environment, region is null ? "NoSet" : region);
+		logger.LogWarning("Group [{solutionId},{environment}, region: {region}, component: {component}] cannot be found.",
+			solutionId, environment, region is null ? "NoSet" : region, component is null ? "NotSet" : component);
 
 		return false;
 	}
@@ -77,49 +83,51 @@ public class LookupClient : ILookupClient
 		return false;
 	}
 
-	public bool TryGetUnique(string solutionId, string environment, string region, string resourceId)
+	public bool TryGetUnique(string resourceId, string solutionId, string environment, string? region, string? component)
 	{
-		var group = azureClient.GetResourceGroup(solutionId, environment, region);
-		if (group is not null)
+		var groups = azureClient.GetResourceGroups(solutionId, environment, region: region, component: component);
+		foreach (var group in groups)
 		{
-			return GetLookup(group, resourceId);
+			if (GetLookup(group, resourceId))
+			{
+				return true;
+			}
 		}
 
 		return false;
 	}
 
-	public bool TryGetUnique(string solutionId, string environment, string resourceId)
+	public string? GetResourceGroupName(string solutionId, string environment, string? component)
 	{
-		var group = azureClient.GetResourceGroup(solutionId, environment);
-		if (group is not null)
+		var groups = azureClient.GetResourceGroups(solutionId, environment, region: null, component: component);
+		if (groups is not null)
 		{
-			return GetLookup(group, resourceId);
-		}
+			var found = groups.Count();
+			if (found > 1)
+			{
+				throw new UserException("More than one group was found. Please provide component.");
+			}
 
-		return false;
-	}
-
-	public string? GetResourceGroupName(string solutionId, string environment)
-	{
-		var group = azureClient.GetResourceGroup(solutionId, environment);
-		if (group is not null)
-		{
-			return group.Data.Name;
+			if (found == 1)
+			{
+				return groups.Single().Data.Name;
+			}
 		}
 
 		return default;
 	}
 
-	public string? GetUniqueName(string solutionId, string environment, string resourceId, string? region)
+	public string? GetUniqueName(string solutionId, string environment, string resourceId, string? region, string? component)
 	{
-		var group = region is not null ?
-			azureClient.GetResourceGroup(solutionId, environment, region) :
-			azureClient.GetResourceGroup(solutionId, environment);
-		if (group is not null)
+		var groups = azureClient.GetResourceGroups(solutionId, environment, region, component);
+		foreach (var group in groups)
 		{
-			return GetName(group, resourceId);
+			var name = GetName(group, resourceId);
+			if (name is not null)
+			{
+				return name;
+			}
 		}
-
 		return default;
 	}
 
@@ -133,7 +141,7 @@ public class LookupClient : ILookupClient
 			return true;
 		}
 
-		logger.LogWarning("Resource [{resourceId}] cannot be found in group [{group}]", resourceId, group.Data.Name);
+		logger.LogDebug("Resource [{resourceId}] cannot be found in group [{group}]", resourceId, group.Data.Name);
 		return false;
 	}
 

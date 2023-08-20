@@ -17,6 +17,7 @@ public static class Constants
 	public const string AsmSolutionId = "asm-solution-id";
 	public const string AsmEnvironment = "asm-environment";
 	public const string AsmRegion = "asm-region";
+	public const string AsmComponent = "asm-component";
 	public const string LockNameSuffix = "-asm-lock";
 	public const string LockNotes = "This resource group is locked to prevent accidental deletion.";
 	public const string PolicySpecificPrefix = "Enforce asm specific";

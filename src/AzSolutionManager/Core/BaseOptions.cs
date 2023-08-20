@@ -32,6 +32,12 @@ public abstract class BaseOptions : IBaseOptions
 	public string? ASMRegion { get; set; }
 
 	/// <summary>
+	/// Gets or sets the ASM region value.
+	/// </summary>
+	[Option("asm-com", HelpText = "Component name value.")]
+	public string? ASMComponent { get; set; }
+
+	/// <summary>
 	/// Gets or sets the ASM resource Id value.
 	/// </summary>
 	[Option("asm-rid", HelpText = "asm resource Id value.")]

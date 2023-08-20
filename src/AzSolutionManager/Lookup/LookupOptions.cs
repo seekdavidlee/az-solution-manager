@@ -22,12 +22,7 @@ public class LookupOptions : BaseOptions
 
 	protected override void RunOperation(ServiceProvider serviceProvider)
 	{
-		var verb = this.Value;
-		if (verb is null)
-		{
-			throw new UserException("Missing option input.");
-		}
-
+		var verb = this.Value ?? throw new UserException("Missing option input.");
 		var lookupClient = serviceProvider.GetRequiredService<ILookupClient>();
 
 		if (verb == Constants.LookupResource)
@@ -37,13 +32,9 @@ public class LookupOptions : BaseOptions
 				throw new UserException("Missing --asm-rid");
 			}
 
-			if (ASMSolutionId is not null && ASMEnvironment is not null && ASMRegion is not null)
+			if (ASMSolutionId is not null && ASMEnvironment is not null)
 			{
-				lookupClient.TryGetUnique(ASMSolutionId, ASMEnvironment, ASMRegion, ASMResourceId);
-			}
-			else if (ASMSolutionId is not null && ASMEnvironment is not null && ASMRegion is null)
-			{
-				lookupClient.TryGetUnique(ASMSolutionId, ASMEnvironment, ASMResourceId);
+				lookupClient.TryGetUnique(ASMResourceId, ASMSolutionId, ASMEnvironment, ASMRegion, ASMComponent);
 			}
 			else
 			{
@@ -65,7 +56,7 @@ public class LookupOptions : BaseOptions
 				throw new UserException("Missing --asm-env");
 			}
 
-			lookupClient.TryGetGroup(ASMSolutionId, ASMEnvironment, ASMRegion);
+			lookupClient.TryGetGroups(ASMSolutionId, ASMEnvironment, ASMRegion, ASMComponent);
 
 			return;
 		}
@@ -87,7 +78,7 @@ public class LookupOptions : BaseOptions
 				throw new UserException("Missing --resource-type");
 			}
 
-			lookupClient.TryGetByResourceType(ASMSolutionId, ASMEnvironment, ResourceType, ASMRegion);
+			lookupClient.TryGetByResourceType(ASMSolutionId, ASMEnvironment, ResourceType, ASMRegion, ASMComponent);
 
 			return;
 		}

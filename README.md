@@ -60,10 +60,11 @@ The following are tags you can apply via your manifest.
 
 ### Tags
 
-* asm-resource-id
-* asm-solution-id
-* asm-environment
-* asm-region (optional)
+* asm-resource-id: Used only for resource
+* asm-solution-id: Used for both resource and group
+* asm-environment: Used for both resource and group
+* asm-region (optional): Used for both resource and group
+* asm-component (optional): Used for group
 * asm-internal-solution-id: Internal id. Do not use.
 
 ### Metadata

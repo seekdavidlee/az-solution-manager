@@ -21,14 +21,13 @@ public interface IAzureClient
 	void DeleteResourceGroupsAndPolicies(string solutionId, string environment);
 	void DeleteAllPolicies();
 	string GetASMInternalSolutionIdValue();
-	ResourceGroupResource? GetResourceGroup(string solutionId, string environment);
-	ResourceGroupResource? GetResourceGroup(string solutionId, string environment, string region);
+	IEnumerable<ResourceGroupResource> GetResourceGroups(string solutionId, string environment, string? region, string? component);
 	ResourceGroupResource? GetResourceGroup(string resourceGroupName);
 
 	ResourceGroupResource[]? GetSolutions();
 
 	GenericResource? GetResource(string resourceId);
-	GenericResource[]? GetResources(string solutionId, string environment, string resourceType, string? region);
+	GenericResource[]? GetResources(string solutionId, string environment, string resourceType, string? region, string? component);
 	ResourceIdentifier? GetRoleDefination(string roleName);
 	public bool ApplyResourceGroupUserRole(ResourceGroupResource resourceGroupResource, ResourceIdentifier roleDefinitionId, Guid principalId, RoleManagementPrincipalType principalType);
 }

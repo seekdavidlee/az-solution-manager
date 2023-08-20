@@ -116,6 +116,13 @@ public static class Extensions
 			azurePolicy.ThenEffectModify.Details.AddOrReplaceTag(Constants.AsmRegion, region);
 		}
 
+		if (!string.IsNullOrEmpty(groupResource.Component))
+		{
+			string component = groupResource.GetValue(x => x.Component, manifestTokenLookup);
+			dic[Constants.AsmComponent] = component;
+			azurePolicy.ThenEffectModify.Details.AddOrReplaceTag(Constants.AsmComponent, component);
+		}
+
 		azurePolicy.If.AnyResource(dic);
 
 		azurePolicy.ThenEffectModify.Details.RoleDefinationIds.Add(Constants.RoleDefinationIds.TagContributor);
@@ -204,6 +211,11 @@ public static class Extensions
 			tags.Add(Constants.AsmRegion, groupResource.Region);
 		}
 
+		if (groupResource.Component is not null) 
+		{
+			tags.Add(Constants.AsmComponent, groupResource.Component);
+		}
+
 		if (groupResource.SolutionId is null)
 		{
 			throw new Exception("SolutionId in manifest cannot be null.");
@@ -257,8 +269,8 @@ public static class Extensions
 
 	public static Dictionary<string, string>? ToDictionary(this BinaryData binaryData)
 	{
-		using (var stream = new MemoryStream(binaryData.ToArray()))
-			return JsonSerializer.Deserialize<Dictionary<string, string>>(stream);
+		using var stream = new MemoryStream(binaryData.ToArray());
+		return JsonSerializer.Deserialize<Dictionary<string, string>>(stream);
 	}
 
 	public static string GetGroupName(this GenericResource resource)
