@@ -21,4 +21,7 @@ public class GroupResource
 
     [JsonPropertyName("resource-group-location")]
     public string? ResourceGroupLocation { get; set; }
+
+	[JsonPropertyName(Constants.AsmComponent)]
+	public string? Component { get; set; }
 }

@@ -67,10 +67,17 @@ $manifestObj.groups | ForEach-Object {
     $solutionId = $_."asm-solution-id"
     $envName = $_."asm-environment"
     $region = $_."asm-region"
+    $component = $_."asm-component"
 
     Write-Host "Testing group lookup for $rgName"
 
-    $json = dotnet run -- lookup group --asm-sol $solutionId --asm-env $envName --asm-reg $region --devtest --logging Debug
+    if ( $component ) {
+        $json = dotnet run -- lookup group --asm-sol $solutionId --asm-env $envName --asm-reg $region --asm-com $component --devtest --logging Debug
+    }
+    else {
+        $json = dotnet run -- lookup group --asm-sol $solutionId --asm-env $envName --asm-reg $region --devtest --logging Debug
+    }
+    
     if ($LastExitCode -ne 0) {
         throw "Error with group lookup."
     }
@@ -208,8 +215,37 @@ if ($LastExitCode -ne 0) {
 }
 
 $allSolutions = $json | ConvertFrom-Json
-if (!$allSolutions -or $allSolutions.Length -ne 9) {
+if (!$allSolutions -or $allSolutions.Length -ne 5) {
     throw "Insufficent solutions listed! Solutions: $allSolutions"
+}
+
+$allSolutions | ForEach-Object {
+    
+    if (!$_.SolutionId) {
+        throw "Expected property SolutionId!"
+    }
+
+    $solutionId = $_.SolutionId
+
+    if ($solutionId -eq "networking" -and $_.ResourceGroups.Length -ne 4) {
+        throw "Expected for $solutionId to contain exactly 4 resource groups!"
+    }
+
+    if ($solutionId -eq "someapp2" -and $_.ResourceGroups.Length -ne 2) {
+        throw "Expected for $solutionId to contain exactly 2 resource groups!"
+    }
+
+    if ($solutionId -eq "tokenreplacementtest" -and $_.ResourceGroups.Length -ne 1) {
+        throw "Expected for $solutionId to contain exactly 1 resource group!"
+    }
+
+    if ($solutionId -eq "someapp1" -and $_.ResourceGroups.Length -ne 1) {
+        throw "Expected for $solutionId to contain exactly 1 resource group!"
+    }
+
+    if ($solutionId -eq "shared1" -and $_.ResourceGroups.Length -ne 2) {
+        throw "Expected for $solutionId to contain exactly 2 resource groups!"
+    }
 }
 
 $solutionId = "shared1"

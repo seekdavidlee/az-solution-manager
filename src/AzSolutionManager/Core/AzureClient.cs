@@ -8,8 +8,6 @@ using Azure.ResourceManager.Resources.Models;
 using Azure.ResourceManager.Authorization;
 using Azure.ResourceManager.Authorization.Models;
 using Azure.ResourceManager.Models;
-using AzSolutionManager.Lookup;
-using System.Security.AccessControl;
 
 namespace AzSolutionManager.Core;
 
@@ -55,50 +53,23 @@ public class AzureClient : IAzureClient
 		this.options = options;
 	}
 
-	private readonly Dictionary<string, ResourceGroupResource> _resourceGroupsCache = new();
-
-	public ResourceGroupResource? GetResourceGroup(string solutionId, string environment)
+	public IEnumerable<ResourceGroupResource> GetResourceGroups(string solutionId, string environment, string? region, string? component)
 	{
-		string key = $"{solutionId}.{environment}";
-		if (_resourceGroupsCache.TryGetValue(key, out ResourceGroupResource? value))
-		{
-			return value;
-		}
-
 		var resourceGroups = subscriptionResource.GetResourceGroups();
-		var groups = resourceGroups.GetAll($"tagName eq '{Constants.AsmSolutionId}' and tagValue eq '{solutionId}'");
-		foreach (var g in groups)
+		var pagedGroups = resourceGroups.GetAll($"tagName eq '{Constants.AsmSolutionId}' and tagValue eq '{solutionId}'");
+		var groups = pagedGroups.Where(x => x.Data.Tags[Constants.AsmEnvironment] == environment);
+
+		if (region is not null)
 		{
-			if (g.Data.Tags[Constants.AsmEnvironment] == environment)
-			{
-				_resourceGroupsCache.Add(key, g);
-				return g;
-			}
+			groups = groups.Where(x => x.Data.Tags.ContainsKey(Constants.AsmRegion) && x.Data.Tags[Constants.AsmRegion] == region);
 		}
 
-		return default;
-	}
-
-	public ResourceGroupResource? GetResourceGroup(string solutionId, string environment, string region)
-	{
-		string key = $"{solutionId}.{environment}.{region}";
-		if (_resourceGroupsCache.TryGetValue(key, out ResourceGroupResource? value))
+		if (component is not null)
 		{
-			return value;
+			groups = groups.Where(x => x.Data.Tags.ContainsKey(Constants.AsmComponent) && x.Data.Tags[Constants.AsmComponent] == component);
 		}
 
-		var resourceGroups = subscriptionResource.GetResourceGroups();
-		var groups = resourceGroups.GetAll($"tagName eq '{Constants.AsmSolutionId}' and tagValue eq '{solutionId}'");
-		foreach (var g in groups)
-		{
-			if (g.Data.Tags[Constants.AsmEnvironment] == environment && g.Data.Tags[Constants.AsmRegion] == region)
-			{
-				_resourceGroupsCache.Add(key, g);
-				return g;
-			}
-		}
-
-		return default;
+		return groups;
 	}
 
 	public void DeleteAllResourceGroups()
@@ -520,18 +491,27 @@ public class AzureClient : IAzureClient
 		return false;
 	}
 
-	public GenericResource[]? GetResources(string solutionId, string environment, string resourceType, string? region)
+	public GenericResource[]? GetResources(string solutionId, string environment, string resourceType, string? region, string? component)
 	{
-		var group = region is not null ? GetResourceGroup(solutionId, environment, region) : GetResourceGroup(solutionId, environment);
-		if (group is not null)
+		var groups = GetResourceGroups(solutionId, environment, region, component);
+		if (groups is not null)
 		{
 			return Retry((attempt) =>
 			{
-				var resources = group.GetGenericResources(filter: $"resourceType eq '{resourceType}'").ToArray();
-
-				if (resources is not null)
+				List<GenericResource> genericResources = new();
+				foreach (var group in groups)
 				{
-					return resources;
+					var resources = group.GetGenericResources(filter: $"resourceType eq '{resourceType}'").ToArray();
+
+					if (resources is not null)
+					{
+						genericResources.AddRange(resources);
+					}
+				}
+
+				if (genericResources.Count > 0)
+				{
+					return genericResources.ToArray();
 				}
 
 				if (attempt > 1)

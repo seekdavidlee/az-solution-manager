@@ -36,10 +36,10 @@ public class ParameterClientTests
 		};
 		parameterDefinationLoader.Get().Returns(d);
 
-		lookupClient.GetUniqueName(d.SolutionId, d.Enviroment, "foo", null).ReturnsNull();
-		lookupClient.GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null).Returns("bar");
+		lookupClient.GetUniqueName(d.SolutionId, d.Enviroment, "foo", null, null).ReturnsNull();
+		lookupClient.GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null, null).Returns("bar");
 
-		parameterClient.CreateDeploymentParameters(environmentName: null);
+		parameterClient.CreateDeploymentParameters(environmentName: null, component: null);
 
 		oneTimeOutWriter.Received().Write(Arg.Is<DeploymentOut>(x =>
 		x.Parameters != null &&
@@ -61,11 +61,11 @@ public class ParameterClientTests
 		};
 		parameterDefinationLoader.Get().Returns(d);
 
-		lookupClient.GetUniqueName(d.SolutionId, d.Enviroment, "foo", null).Returns("Soap");
+		lookupClient.GetUniqueName(d.SolutionId, d.Enviroment, "foo", null, null).Returns("Soap");
 
-		parameterClient.CreateDeploymentParameters(environmentName: null);
+		parameterClient.CreateDeploymentParameters(environmentName: null, component: null);
 
-		lookupClient.DidNotReceive().GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null);
+		lookupClient.DidNotReceive().GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null, component: null);
 		oneTimeOutWriter.Received().Write(Arg.Is<DeploymentOut>(x =>
 		x.Parameters != null &&
 		x.Parameters.ContainsKey("storageName") &&
@@ -86,11 +86,37 @@ public class ParameterClientTests
 		};
 		parameterDefinationLoader.Get().Returns(d);
 
-		lookupClient.GetUniqueName(d.SolutionId, "stage", "foo", null).Returns("Soap");
+		lookupClient.GetUniqueName(d.SolutionId, "stage", "foo", null, null).Returns("Soap");
 
-		parameterClient.CreateDeploymentParameters(environmentName: "stage");
+		parameterClient.CreateDeploymentParameters(environmentName: "stage", component: null);
 
-		lookupClient.DidNotReceive().GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null);
+		lookupClient.DidNotReceive().GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null, component: null);
+		oneTimeOutWriter.Received().Write(Arg.Is<DeploymentOut>(x =>
+		x.Parameters != null &&
+		x.Parameters.ContainsKey("storageName") &&
+		x.Parameters["storageName"].Value == "Soap"), false);
+	}
+
+	[TestMethod]
+	public void WithExistingResourceTaggedAndComponentOverride_ReturnName()
+	{
+		var d = new ParameterDefination
+		{
+			SolutionId = "Solution1",
+			Enviroment = "dev",
+			Component = "database",
+			Parameters = new Dictionary<string, string>()
+			{
+				{"storageName","@asm-resource-id:foo,@asm-resource-type:Microsoft.Storage/storageAccounts" }
+			}
+		};
+		parameterDefinationLoader.Get().Returns(d);
+
+		lookupClient.GetUniqueName(d.SolutionId, "dev", "foo", null, component: "api").Returns("Soap");
+
+		parameterClient.CreateDeploymentParameters(environmentName: null, component: "api");
+
+		lookupClient.DidNotReceive().GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null, component: null);
 		oneTimeOutWriter.Received().Write(Arg.Is<DeploymentOut>(x =>
 		x.Parameters != null &&
 		x.Parameters.ContainsKey("storageName") &&
@@ -111,10 +137,10 @@ public class ParameterClientTests
 		};
 		parameterDefinationLoader.Get().Returns(d);
 
-		lookupClient.GetUniqueName(d.SolutionId, d.Enviroment, "foo", null).ReturnsNull();
-		lookupClient.GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null).ReturnsNull();
+		lookupClient.GetUniqueName(d.SolutionId, d.Enviroment, "foo", null, null).ReturnsNull();
+		lookupClient.GetNameByResourceType(d.SolutionId, d.Enviroment, "Microsoft.Storage/storageAccounts", null, component: null).ReturnsNull();
 
-		parameterClient.CreateDeploymentParameters(environmentName: null);
+		parameterClient.CreateDeploymentParameters(environmentName: null, component: null);
 
 
 		oneTimeOutWriter.Received().Write(Arg.Is<DeploymentOut>(x =>

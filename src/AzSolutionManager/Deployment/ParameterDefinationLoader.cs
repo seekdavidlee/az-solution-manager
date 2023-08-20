@@ -32,12 +32,7 @@ public class ParameterDefinationLoader : IParameterDefinationLoader
 			throw new Exception("Unexpected for manifest content to be empty.");
 		}
 
-		var d = JsonSerializer.Deserialize<ParameterDefination>(content);
-		if (d is null)
-		{
-			throw new Exception("Unexpected for manifest null.");
-		}
-
+		var d = JsonSerializer.Deserialize<ParameterDefination>(content) ?? throw new Exception("Unexpected for manifest null.");
 		parameterDefination = d;
 		return parameterDefination;
 	}

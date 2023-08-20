@@ -16,6 +16,9 @@ public class ParameterDefination
 	[JsonPropertyName("region")]
 	public string? Region { get; set; }
 
+	[JsonPropertyName("component")]
+	public string? Component { get; set; }
+
 	[JsonPropertyName("compressJsonOutput")]
 	public bool CompressJsonOutput { get; set; }
 }

@@ -57,7 +57,7 @@ public class RoleOptions : BaseOptions
 			}
 
 			var svc = serviceProvider.GetRequiredService<RoleAssignmentClient>();
-			svc.Apply(RoleName, PrincipalId.Value, PrincipalType, ASMSolutionId, ASMEnvironment, ASMRegion);
+			svc.Apply(RoleName, PrincipalId.Value, PrincipalType, ASMSolutionId, ASMEnvironment, ASMRegion, ASMComponent);
 			return;
 		}
 

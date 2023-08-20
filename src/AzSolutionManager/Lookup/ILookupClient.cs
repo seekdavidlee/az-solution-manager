@@ -2,12 +2,11 @@
 
 public interface ILookupClient
 {
-	bool TryGetByResourceType(string solutionId, string environment, string resourceType, string? region);
-	string? GetNameByResourceType(string solutionId, string environment, string resourceType, string? region);
-	bool TryGetGroup(string solutionId, string environment, string? region);
+	bool TryGetByResourceType(string solutionId, string environment, string resourceType, string? region, string? component);
+	string? GetNameByResourceType(string solutionId, string environment, string resourceType, string? region, string? component);
+	bool TryGetGroups(string solutionId, string environment, string? region, string? component);
 	bool TryGetUnique(string resourceId);
-	bool TryGetUnique(string solutionId, string environment, string region, string resourceId);
-	bool TryGetUnique(string solutionId, string environment, string resourceId);
-	string? GetResourceGroupName(string solutionId, string environment);
-	string? GetUniqueName(string solutionId, string environment, string resourceId, string? region);
+	bool TryGetUnique(string resourceId, string solutionId, string environment, string? region, string? component);
+	string? GetResourceGroupName(string solutionId, string environment, string? component);
+	string? GetUniqueName(string solutionId, string environment, string resourceId, string? region, string? component);
 }

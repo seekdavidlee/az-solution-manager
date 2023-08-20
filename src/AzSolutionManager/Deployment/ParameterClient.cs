@@ -19,7 +19,7 @@ public class ParameterClient
 		this.parameterDefinationLoader = parameterDefinationLoader;
 	}
 
-	public void CreateDeploymentParameters(string? environmentName)
+	public void CreateDeploymentParameters(string? environmentName, string? component)
 	{
 		var d = parameterDefinationLoader.Get();
 
@@ -39,6 +39,11 @@ public class ParameterClient
 			d.Enviroment = environmentName;
 		}
 
+		if (component is not null)
+		{
+			d.Component = component;
+		}
+
 		if (d.Enviroment is null)
 		{
 			throw new UserException("Missing configuring environment in your file.");
@@ -46,18 +51,18 @@ public class ParameterClient
 
 		var deploymentOut = new DeploymentOut
 		{
-			GroupName = lookupClient.GetResourceGroupName(d.SolutionId, d.Enviroment)
+			GroupName = lookupClient.GetResourceGroupName(d.SolutionId, d.Enviroment, d.Component)
 		};
 
 		foreach (var p in d.Parameters)
 		{
-			Parse(p, d.SolutionId, d.Enviroment, d.Region, deploymentOut);
+			Parse(p, d.SolutionId, d.Enviroment, d.Region, d.Component, deploymentOut);
 		}
 
 		oneTimeOutWriter.Write(deploymentOut, d.CompressJsonOutput);
 	}
 
-	private void Parse(KeyValuePair<string, string> p, string solutionId, string environment, string? region, DeploymentOut deploymentOut)
+	private void Parse(KeyValuePair<string, string> p, string solutionId, string environment, string? region, string? component, DeploymentOut deploymentOut)
 	{
 		var conditions = p.Value.Split(',');
 		foreach (var condition in conditions)
@@ -75,8 +80,8 @@ public class ParameterClient
 				value = h[0] switch
 				{
 					"@env" => Environment.GetEnvironmentVariable(h[1]),
-					"@asm-resource-id" => lookupClient.GetUniqueName(solutionId, environment, h[1], region),
-					"@asm-resource-type" => lookupClient.GetNameByResourceType(solutionId, environment, h[1], region),
+					"@asm-resource-id" => lookupClient.GetUniqueName(solutionId, environment, h[1], region, component: component),
+					"@asm-resource-type" => lookupClient.GetNameByResourceType(solutionId, environment, h[1], region, component: component),
 					_ => throw new Exception($"{h[0]} is not a valid.")
 				};
 			}
@@ -87,7 +92,6 @@ public class ParameterClient
 				return;
 			}
 		}
-
 
 		// Do not throw an exception if it is missing. This is expected if resource has not been created yet.
 	}

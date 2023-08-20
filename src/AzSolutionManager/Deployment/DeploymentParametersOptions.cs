@@ -22,16 +22,11 @@ public class DeploymentParametersOptions : BaseOptions
 
 	protected override void RunOperation(ServiceProvider serviceProvider)
 	{
-		var verb = this.Value;
-		if (verb is null)
-		{
-			throw new UserException("Missing option input.");
-		}
-
+		var verb = Value ?? throw new UserException("Missing option input.");
 		if (verb == "parameters")
 		{
 			var svc = serviceProvider.GetRequiredService<ParameterClient>();
-			svc.CreateDeploymentParameters(this.ASMEnvironment);
+			svc.CreateDeploymentParameters(ASMEnvironment, ASMComponent);
 			return;
 		}
 
