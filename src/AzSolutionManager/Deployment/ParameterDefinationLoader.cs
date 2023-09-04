@@ -4,9 +4,9 @@ namespace AzSolutionManager.Deployment;
 
 public class ParameterDefinationLoader : IParameterDefinationLoader
 {
-	private readonly DeploymentParametersOptions options;
+	private readonly DeploymentOptions options;
 
-	public ParameterDefinationLoader(DeploymentParametersOptions options)
+	public ParameterDefinationLoader(DeploymentOptions options)
 	{
 		this.options = options;
 	}

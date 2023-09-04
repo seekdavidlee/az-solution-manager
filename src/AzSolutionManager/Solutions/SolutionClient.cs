@@ -57,8 +57,10 @@ public class SolutionClient
 				} 
 				else
 				{
-					var newVal = new ListSolutionOut();
-					newVal.SolutionId = solutionId;
+					var newVal = new ListSolutionOut
+					{
+						SolutionId = solutionId
+					};
 					newVal.ResourceGroups.Add(mapped);
 					results.Add(solutionId, newVal);
 				}

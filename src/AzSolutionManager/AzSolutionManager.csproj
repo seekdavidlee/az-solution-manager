@@ -25,9 +25,10 @@
   </ItemGroup>	
 
   <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.9.0" />
+    <PackageReference Include="Azure.Identity" Version="1.10.0" />
     <PackageReference Include="Azure.ResourceManager" Version="1.7.0" />
     <PackageReference Include="Azure.ResourceManager.Authorization" Version="1.0.1" />
+    <PackageReference Include="Azure.ResourceManager.Resources" Version="1.6.0" />
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="FastMember" Version="1.5.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />

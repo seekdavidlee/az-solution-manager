@@ -1,6 +1,7 @@
 ﻿using AzSolutionManager.Core;
 using AzSolutionManager.Deployment;
 using AzSolutionManager.Lookup;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
 
@@ -19,7 +20,7 @@ public class ParameterClientTests
 		lookupClient = Substitute.For<ILookupClient>();
 		oneTimeOutWriter = Substitute.For<IOneTimeOutWriter>();
 		parameterDefinationLoader = Substitute.For<IParameterDefinationLoader>();
-		parameterClient = new ParameterClient(lookupClient, oneTimeOutWriter, parameterDefinationLoader);
+		parameterClient = new ParameterClient(lookupClient, oneTimeOutWriter, parameterDefinationLoader, Substitute.For<IAzureClient>(), Substitute.For<ILogger<ParameterClient>>());
 	}
 
 	[TestMethod]
