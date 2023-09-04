@@ -103,3 +103,5 @@ You can also run deployment directly with the run command and by providing the b
 ```bash
 asm deployment run -f $file --template-filepath $bicepFile
 ```
+
+This command makes use of the Azure CLI ```  az deployment group create ``` command. Please ensure Azure CLI is installed and the PATH environment is configured.
