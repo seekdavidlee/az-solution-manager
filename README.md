@@ -95,3 +95,11 @@ Take the following example for creating the deployment parameters file. Assume t
     "compressJsonOutput": true
 }
 ```
+
+### Run deployment
+
+You can also run deployment directly with the run command and by providing the bicep file. The resource group and parameters will both be looked up internally.
+
+```bash
+asm deployment run -f $file --template-filepath $bicepFile
+```

@@ -30,6 +30,12 @@ To remove the solution, use the delete option with the solution command.
 asm solution delete --asm-sol mysolution --asm-env dev
 ```
 
+To run deployment, use deployment command.
+
+```bash
+asm deployment run -f $file --template-filepath $bicepFile
+```
+
 ## Get Help
 
 Get version and show all available command options.
