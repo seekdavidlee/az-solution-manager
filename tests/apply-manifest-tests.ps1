@@ -111,25 +111,9 @@ $manifestObj.groups | ForEach-Object {
         $file = "$location\deploy-shared.bicep.$envName.json"
         Write-Host "Testing $file"
 
-        $json = dotnet run -- deployment parameters -f $file --devtest --logging Debug
+        dotnet run -- deployment run -f $file --template-filepath "$location\deploy-shared.bicep" --devtest --logging Debug
         if ($LastExitCode -ne 0) {
-            throw "Error processing $file. $json"
-        }
-
-        $p = ($json | ConvertFrom-Json).Parameters
-        if (!$p) {
-            Write-Host "No parameters created"
-            az deployment group create --resource-group $objName --template-file "$location\deploy-shared.bicep"
-        }
-        else {
-            $json = $p | ConvertTo-Json -Compress
-            $json = $json.Replace('"', '\"')
-    
-            az deployment group create --resource-group $objName --template-file "$location\deploy-shared.bicep" --parameters $json
-        }
-
-        if ($LastExitCode -ne 0) {
-            throw "Error running deployment for $objName."
+            throw "Error processing $file"
         }
 
         $json = dotnet run -- lookup resource --asm-rid "shared-storage" --asm-sol $solutionId --asm-env $envName --devtest --logging Debug
@@ -246,6 +230,11 @@ $allSolutions | ForEach-Object {
     if ($solutionId -eq "shared1" -and $_.ResourceGroups.Length -ne 2) {
         throw "Expected for $solutionId to contain exactly 2 resource groups!"
     }
+}
+
+dotnet run -- deployment run -f "$location\deploy-err.json" --template-filepath "$location\deploy-err.bicep" --devtest --logging Debug
+if ($LastExitCode -eq 0) {
+    throw "Expected error but did not get an error processing deploy-err.bicep"
 }
 
 $solutionId = "shared1"

@@ -1,0 +1,7 @@
+{
+    "parameters": {
+        "appConfigName": "@asm-resource-id:shared-configuration"        
+    },
+    "solutionId": "shared1",
+    "environment": "dev"
+}

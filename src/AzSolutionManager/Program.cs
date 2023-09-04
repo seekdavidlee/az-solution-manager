@@ -21,7 +21,7 @@ public partial class Program
 	static int Main(string[] args)
 	{
 		static int initOptions(InitOptions options) => options.Run(SetupDependencyInjection(options));
-		static int deploymentParametersOptions(DeploymentParametersOptions options) => options.Run(SetupDependencyInjection(options)); ;
+		static int deploymentParametersOptions(DeploymentOptions options) => options.Run(SetupDependencyInjection(options)); ;
 		static int lookupOptions(LookupOptions options) => options.Run(SetupDependencyInjection(options));
 		static int applyManifestOptions(ManifestOptions options) => options.Run(SetupDependencyInjection(options));
 		static int destroyAllOptions(DestroyAllOptions options) => options.Run(SetupDependencyInjection(options));
@@ -50,14 +50,14 @@ public partial class Program
 		}
 
 		return Parser.Default.ParseArguments<InitOptions,
-			DeploymentParametersOptions,
+			DeploymentOptions,
 			LookupOptions,
 			ManifestOptions,
 			DestroyAllOptions,
 			RoleOptions,
 			SolutionOptions>(args).MapResult(
 			(Func<InitOptions, int>)initOptions,
-			(Func<DeploymentParametersOptions, int>)deploymentParametersOptions,
+			(Func<DeploymentOptions, int>)deploymentParametersOptions,
 			(Func<LookupOptions, int>)lookupOptions,
 			(Func<ManifestOptions, int>)applyManifestOptions,
 			(Func<DestroyAllOptions, int>)destroyAllOptions,
