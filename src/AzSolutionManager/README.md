@@ -8,6 +8,12 @@ Initialize your Azure Subscription.
 asm init --resource-group-name asm --location centralus --managed-identity asm-identity
 ```
 
+If you have multiple tenants/subscriptions, you can set the tenant and subscription with the following command. Replace the placeholder values.
+
+```bash
+asm profile -s $SUBSCRIPTIONID -t $TENANTID
+```
+
 Now, we are ready to apply the manifest on your Azure Subscription. The manifest contains your solution definations.
 
 ```bash

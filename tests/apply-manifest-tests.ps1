@@ -8,6 +8,11 @@ $manifestPath = "$location\manifest.json"
 $manifestWithToken = "$location\manifestwithtoken.json"
 
 Push-Location ..\src\AzSolutionManager
+dotnet run -- profile --show --devtest
+if ($LastExitCode -ne 0) {
+    throw "Did not expect an error here."
+}
+
 dotnet run -- manifest apply -f $manifestPath --devtest
 if ($LastExitCode -eq 0) {
     throw "Expected an error to be thrown but no error was thrown."

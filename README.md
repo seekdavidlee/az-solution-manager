@@ -47,6 +47,26 @@ To remove the solution, use the delete option.
 asm solution delete --asm-sol mysolution --asm-env dev
 ```
 
+## Profile
+
+If you have multiple tenants/subscriptions, you can set the tenant and subscription with the following command. Replace the placeholder values.
+
+```bash
+asm profile -s $SUBSCRIPTIONID -t $TENANTID
+```
+
+Use the following command to show current profile.
+
+```bash
+asm profile --show
+```
+
+Use the following command to clear profile.
+
+```bash
+asm profile --clear
+```
+
 ## Flags
 
 You can specify the following flags along with the command.

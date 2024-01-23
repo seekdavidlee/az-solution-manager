@@ -8,6 +8,7 @@ using Azure.ResourceManager.Resources.Models;
 using Azure.ResourceManager.Authorization;
 using Azure.ResourceManager.Authorization.Models;
 using Azure.ResourceManager.Models;
+using AzSolutionManager.Profiles;
 
 namespace AzSolutionManager.Core;
 
@@ -21,7 +22,17 @@ public class AzureClient : IAzureClient
 
 	public AzureClient(ILogger<AzureClient> logger, IBaseOptions options)
 	{
-		if (options.Tenant is not null)
+        if (options.Tenant is null)
+		{
+			options.Tenant = ProfileClient.Get()?.TenantId;
+		}
+
+		if (options.Subscription is null)
+		{
+			options.Subscription = ProfileClient.Get()?.Subscription;
+		}
+
+        if (options.Tenant is not null)
 		{
 			client = new ArmClient(new DefaultAzureCredential(new DefaultAzureCredentialOptions
 			{
