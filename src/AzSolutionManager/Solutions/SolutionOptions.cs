@@ -28,7 +28,7 @@ public class SolutionOptions : BaseOptions
 		if (verb == "list")
 		{
 			var svc = serviceProvider.GetRequiredService<SolutionClient>();
-			svc.ListSolutions(ASMRegion, ASMEnvironment);
+			svc.ListSolutions(ASMRegion, ASMEnvironment, ASMSolutionId, ASMComponent);
 			return;
 		}
 

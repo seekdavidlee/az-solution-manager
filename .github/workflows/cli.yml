@@ -3,7 +3,7 @@ on:
     paths-ignore:
       - 'README.md'
 env:
-  CLI_VERSION: '0.2.0-beta'
+  CLI_VERSION: '0.2.1-beta'
 
 jobs:
   setup:
