@@ -14,532 +14,533 @@ namespace AzSolutionManager.Core;
 
 public class AzureClient : IAzureClient
 {
-	private readonly ArmClient client;
-	private readonly string subscriptionId;
-	private readonly SubscriptionResource subscriptionResource;
-	private readonly ILogger<AzureClient> logger;
-	private readonly IBaseOptions options;
+    private readonly ArmClient client;
+    private readonly string subscriptionId;
+    private readonly SubscriptionResource subscriptionResource;
+    private readonly ILogger<AzureClient> logger;
+    private readonly IBaseOptions options;
 
-	public AzureClient(ILogger<AzureClient> logger, IBaseOptions options)
-	{
+    public AzureClient(ILogger<AzureClient> logger, IBaseOptions options)
+    {
         if (options.Tenant is null)
-		{
-			options.Tenant = ProfileClient.Get()?.TenantId;
-		}
+        {
+            options.Tenant = ProfileClient.Get()?.TenantId;
+        }
 
-		if (options.Subscription is null)
-		{
-			options.Subscription = ProfileClient.Get()?.Subscription;
-		}
+        if (options.Subscription is null)
+        {
+            options.Subscription = ProfileClient.Get()?.Subscription;
+        }
 
         if (options.Tenant is not null)
-		{
-			client = new ArmClient(new DefaultAzureCredential(new DefaultAzureCredentialOptions
-			{
-				TenantId = options.Tenant
-			}));
-		}
-		else
-		{
-			client = new ArmClient(new DefaultAzureCredential());
-		}
+        {
+            client = new ArmClient(new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            {
+                TenantId = options.Tenant
+            }));
+        }
+        else
+        {
+            // Azure CLI is a requirement, DefaultAzureCredential does not work.
+            client = new ArmClient(new AzureCliCredential());
+        }
 
-		SubscriptionResource? found = null;
-		if (options.Subscription is not null)
-		{
-			found = Guid.TryParse(options.Subscription, out _) ?
-				client.GetSubscriptionResource(new ResourceIdentifier(string.Format(Constants.SubscriptionsPrefix, options.Subscription))) :
-				client.GetSubscriptions().FirstOrDefault(x => string.Equals(x.Data.DisplayName, options.Subscription, StringComparison.OrdinalIgnoreCase));
-		}
+        SubscriptionResource? found = null;
+        if (options.Subscription is not null)
+        {
+            found = Guid.TryParse(options.Subscription, out _) ?
+                client.GetSubscriptionResource(new ResourceIdentifier(string.Format(Constants.SubscriptionsPrefix, options.Subscription))) :
+                client.GetSubscriptions().FirstOrDefault(x => string.Equals(x.Data.DisplayName, options.Subscription, StringComparison.OrdinalIgnoreCase));
+        }
 
-		subscriptionResource = found ?? client.GetDefaultSubscription();
+        subscriptionResource = found ?? client.GetDefaultSubscription();
 
-		if (subscriptionResource.Id.SubscriptionId is null)
-		{
-			throw new Exception("Unexpected for subscription Id to be null.");
-		}
+        if (subscriptionResource.Id.SubscriptionId is null)
+        {
+            throw new Exception("Unexpected for subscription Id to be null.");
+        }
 
-		subscriptionId = subscriptionResource.Id.SubscriptionId;
-		this.logger = logger;
-		this.options = options;
-	}
+        subscriptionId = subscriptionResource.Id.SubscriptionId;
+        this.logger = logger;
+        this.options = options;
+    }
 
-	public IEnumerable<ResourceGroupResource> GetResourceGroups(string solutionId, string environment, string? region, string? component)
-	{
-		var resourceGroups = subscriptionResource.GetResourceGroups();
-		var pagedGroups = resourceGroups.GetAll($"tagName eq '{Constants.AsmSolutionId}' and tagValue eq '{solutionId}'");
-		var groups = pagedGroups.Where(x => x.Data.Tags[Constants.AsmEnvironment] == environment);
+    public IEnumerable<ResourceGroupResource> GetResourceGroups(string solutionId, string environment, string? region, string? component)
+    {
+        var resourceGroups = subscriptionResource.GetResourceGroups();
+        var pagedGroups = resourceGroups.GetAll($"tagName eq '{Constants.AsmSolutionId}' and tagValue eq '{solutionId}'");
+        var groups = pagedGroups.Where(x => x.Data.Tags[Constants.AsmEnvironment] == environment);
 
-		if (region is not null)
-		{
-			groups = groups.Where(x => x.Data.Tags.ContainsKey(Constants.AsmRegion) && x.Data.Tags[Constants.AsmRegion] == region);
-		}
+        if (region is not null)
+        {
+            groups = groups.Where(x => x.Data.Tags.ContainsKey(Constants.AsmRegion) && x.Data.Tags[Constants.AsmRegion] == region);
+        }
 
-		if (component is not null)
-		{
-			groups = groups.Where(x => x.Data.Tags.ContainsKey(Constants.AsmComponent) && x.Data.Tags[Constants.AsmComponent] == component);
-		}
+        if (component is not null)
+        {
+            groups = groups.Where(x => x.Data.Tags.ContainsKey(Constants.AsmComponent) && x.Data.Tags[Constants.AsmComponent] == component);
+        }
 
-		return groups;
-	}
+        return groups;
+    }
 
-	public void DeleteAllResourceGroups()
-	{
-		var resourceGroups = subscriptionResource.GetResourceGroups();
-		var groups = resourceGroups.GetAll($"tagName eq '{Constants.AsmInternalSolutionId}' and tagValue eq '{GetASMInternalSolutionIdValue()}'");
-		foreach (var group in groups)
-		{
-			var locks = group.GetManagementLocks();
-			bool preventDelete = false;
-			foreach (var mlock in locks)
-			{
-				if (mlock.Data.Name.EndsWith(Constants.LockNameSuffix) &&
-					mlock.Data.Notes == Constants.LockNotes)
-				{
-					mlock.Delete(WaitUntil.Completed);
-					logger.LogInformation("Deleted ASM created lock '{lockName}'", mlock.Data.Name);
-				}
-				else
-				{
-					preventDelete = true;
-				}
-			}
+    public void DeleteAllResourceGroups()
+    {
+        var resourceGroups = subscriptionResource.GetResourceGroups();
+        var groups = resourceGroups.GetAll($"tagName eq '{Constants.AsmInternalSolutionId}' and tagValue eq '{GetASMInternalSolutionIdValue()}'");
+        foreach (var group in groups)
+        {
+            var locks = group.GetManagementLocks();
+            bool preventDelete = false;
+            foreach (var mlock in locks)
+            {
+                if (mlock.Data.Name.EndsWith(Constants.LockNameSuffix) &&
+                    mlock.Data.Notes == Constants.LockNotes)
+                {
+                    mlock.Delete(WaitUntil.Completed);
+                    logger.LogInformation("Deleted ASM created lock '{lockName}'", mlock.Data.Name);
+                }
+                else
+                {
+                    preventDelete = true;
+                }
+            }
 
-			if (preventDelete)
-			{
-				logger.LogWarning("Unable to remove resource group {resourceGroupName} as there are locks. Please manually remove the lock(s) and try again.", group.Data.Name);
-				continue;
-			}
+            if (preventDelete)
+            {
+                logger.LogWarning("Unable to remove resource group {resourceGroupName} as there are locks. Please manually remove the lock(s) and try again.", group.Data.Name);
+                continue;
+            }
 
-			group.Delete(WaitUntil.Completed);
-			logger.LogInformation("Deleted resource group {resourceGroupName}", group.Data.Name);
-		}
-	}
+            group.Delete(WaitUntil.Completed);
+            logger.LogInformation("Deleted resource group {resourceGroupName}", group.Data.Name);
+        }
+    }
 
-	public void DeleteAllPolicies()
-	{
-		var subscriptionPolicyDefinitions = subscriptionResource.GetSubscriptionPolicyDefinitions();
+    public void DeleteAllPolicies()
+    {
+        var subscriptionPolicyDefinitions = subscriptionResource.GetSubscriptionPolicyDefinitions();
 
-		foreach (var policy in subscriptionPolicyDefinitions.Where(x => x.Data.DisplayName.StartsWith(Constants.PolicySpecificPrefix)))
-		{
-			var meta = policy.Data.Metadata.ToDictionary();
-			if (meta is not null && meta.TryGetValue(Constants.AsmInternalSolutionId, out var asmInternalSolutionId))
-			{
-				if (asmInternalSolutionId == GetASMInternalSolutionIdValue())
-				{
-					try
-					{
-						policy.Delete(WaitUntil.Completed);
-						logger.LogInformation("Deleted policy '{policyName}'", policy.Data.Name);
-					}
-					catch (RequestFailedException rEx)
-					{
-						logger.LogError(rEx, "Unable to remove policy '{policyId}'", policy.Data.Name);
-					}
-				}
-			}
-		}
-	}
+        foreach (var policy in subscriptionPolicyDefinitions.Where(x => x.Data.DisplayName.StartsWith(Constants.PolicySpecificPrefix)))
+        {
+            var meta = policy.Data.Metadata.ToDictionary();
+            if (meta is not null && meta.TryGetValue(Constants.AsmInternalSolutionId, out var asmInternalSolutionId))
+            {
+                if (asmInternalSolutionId == GetASMInternalSolutionIdValue())
+                {
+                    try
+                    {
+                        policy.Delete(WaitUntil.Completed);
+                        logger.LogInformation("Deleted policy '{policyName}'", policy.Data.Name);
+                    }
+                    catch (RequestFailedException rEx)
+                    {
+                        logger.LogError(rEx, "Unable to remove policy '{policyId}'", policy.Data.Name);
+                    }
+                }
+            }
+        }
+    }
 
-	private void DeleteAllPolicies(string solutionId, string environment)
-	{
-		var subscriptionPolicyDefinitions = subscriptionResource.GetSubscriptionPolicyDefinitions();
+    private void DeleteAllPolicies(string solutionId, string environment)
+    {
+        var subscriptionPolicyDefinitions = subscriptionResource.GetSubscriptionPolicyDefinitions();
 
-		foreach (var policy in subscriptionPolicyDefinitions.Where(x => x.Data.DisplayName.StartsWith(Constants.PolicySpecificPrefix)))
-		{
-			var meta = policy.Data.Metadata.ToDictionary();
-			if (meta is not null &&
-				meta.TryGetValue(Constants.AsmInternalSolutionId, out var asmInternalSolutionId) &&
-				meta.TryGetValue(Constants.AsmSolutionId, out var asmSolutionId) &&
-				meta.TryGetValue(Constants.AsmEnvironment, out var asmEnvironment))
-			{
-				if (asmInternalSolutionId == GetASMInternalSolutionIdValue() &&
-					asmSolutionId == solutionId &&
-					asmEnvironment == environment)
-				{
-					try
-					{
-						policy.Delete(WaitUntil.Completed);
-						logger.LogInformation("Deleted policy '{policyName}'", policy.Data.Name);
-					}
-					catch (RequestFailedException rEx)
-					{
-						logger.LogError(rEx, "Unable to remove policy '{policyId}'", policy.Data.Name);
-					}
-				}
-			}
-		}
-	}
+        foreach (var policy in subscriptionPolicyDefinitions.Where(x => x.Data.DisplayName.StartsWith(Constants.PolicySpecificPrefix)))
+        {
+            var meta = policy.Data.Metadata.ToDictionary();
+            if (meta is not null &&
+                meta.TryGetValue(Constants.AsmInternalSolutionId, out var asmInternalSolutionId) &&
+                meta.TryGetValue(Constants.AsmSolutionId, out var asmSolutionId) &&
+                meta.TryGetValue(Constants.AsmEnvironment, out var asmEnvironment))
+            {
+                if (asmInternalSolutionId == GetASMInternalSolutionIdValue() &&
+                    asmSolutionId == solutionId &&
+                    asmEnvironment == environment)
+                {
+                    try
+                    {
+                        policy.Delete(WaitUntil.Completed);
+                        logger.LogInformation("Deleted policy '{policyName}'", policy.Data.Name);
+                    }
+                    catch (RequestFailedException rEx)
+                    {
+                        logger.LogError(rEx, "Unable to remove policy '{policyId}'", policy.Data.Name);
+                    }
+                }
+            }
+        }
+    }
 
-	public void DeleteResourceGroupsAndPolicies(string solutionId, string environment)
-	{
-		var resourceGroups = subscriptionResource.GetResourceGroups();
-		var groups = resourceGroups.GetAll($"tagName eq '{Constants.AsmSolutionId}' and tagValue eq '{solutionId}'")
-			.Where(x => x.Data.Tags[Constants.AsmEnvironment] == environment);
-		foreach (var group in groups)
-		{
-			var locks = group.GetManagementLocks();
-			bool preventDelete = false;
-			foreach (var mlock in locks)
-			{
-				if (mlock.Data.Name.EndsWith(Constants.LockNameSuffix) &&
-					mlock.Data.Notes == Constants.LockNotes)
-				{
-					mlock.Delete(WaitUntil.Completed);
-					logger.LogInformation("Deleted ASM created lock '{lockName}'", mlock.Data.Name);
-				}
-				else
-				{
-					preventDelete = true;
-				}
-			}
+    public void DeleteResourceGroupsAndPolicies(string solutionId, string environment)
+    {
+        var resourceGroups = subscriptionResource.GetResourceGroups();
+        var groups = resourceGroups.GetAll($"tagName eq '{Constants.AsmSolutionId}' and tagValue eq '{solutionId}'")
+            .Where(x => x.Data.Tags[Constants.AsmEnvironment] == environment);
+        foreach (var group in groups)
+        {
+            var locks = group.GetManagementLocks();
+            bool preventDelete = false;
+            foreach (var mlock in locks)
+            {
+                if (mlock.Data.Name.EndsWith(Constants.LockNameSuffix) &&
+                    mlock.Data.Notes == Constants.LockNotes)
+                {
+                    mlock.Delete(WaitUntil.Completed);
+                    logger.LogInformation("Deleted ASM created lock '{lockName}'", mlock.Data.Name);
+                }
+                else
+                {
+                    preventDelete = true;
+                }
+            }
 
-			if (preventDelete)
-			{
-				logger.LogWarning("Unable to remove resource group {resourceGroupName} as there are locks. Please manually remove the lock(s) and try again.", group.Data.Name);
-				continue;
-			}
+            if (preventDelete)
+            {
+                logger.LogWarning("Unable to remove resource group {resourceGroupName} as there are locks. Please manually remove the lock(s) and try again.", group.Data.Name);
+                continue;
+            }
 
-			var policiesAssignments = group.GetPolicyAssignments();
-			foreach (var policyAssignment in policiesAssignments)
-			{
-				if (!policyAssignment.Data.Name.StartsWith(Constants.PolicySpecificPrefix))
-				{
-					continue;
-				}
+            var policiesAssignments = group.GetPolicyAssignments();
+            foreach (var policyAssignment in policiesAssignments)
+            {
+                if (!policyAssignment.Data.Name.StartsWith(Constants.PolicySpecificPrefix))
+                {
+                    continue;
+                }
 
-				policyAssignment.Delete(WaitUntil.Completed);
-				logger.LogInformation("Deleted policy assignment '{policyAssignmentName}'", policyAssignment.Data.Name);
-			}
+                policyAssignment.Delete(WaitUntil.Completed);
+                logger.LogInformation("Deleted policy assignment '{policyAssignmentName}'", policyAssignment.Data.Name);
+            }
 
-			group.Delete(WaitUntil.Completed);
-			logger.LogInformation("Deleted resource group {resourceGroupName}", group.Data.Name);
-		}
+            group.Delete(WaitUntil.Completed);
+            logger.LogInformation("Deleted resource group {resourceGroupName}", group.Data.Name);
+        }
 
-		// Cleanup policies
-		DeleteAllPolicies(solutionId, environment);
-	}
+        // Cleanup policies
+        DeleteAllPolicies(solutionId, environment);
+    }
 
-	public bool TryGetAzurePolicyDefinition(string displayName, out SubscriptionPolicyDefinitionResource? policy)
-	{
-		var subscriptionPolicyDefinitions = subscriptionResource.GetSubscriptionPolicyDefinitions();
-		var found = subscriptionPolicyDefinitions.SingleOrDefault(x => x.Data.DisplayName == displayName);
+    public bool TryGetAzurePolicyDefinition(string displayName, out SubscriptionPolicyDefinitionResource? policy)
+    {
+        var subscriptionPolicyDefinitions = subscriptionResource.GetSubscriptionPolicyDefinitions();
+        var found = subscriptionPolicyDefinitions.SingleOrDefault(x => x.Data.DisplayName == displayName);
 
-		if (found is null)
-		{
-			policy = null;
-			return false;
-		}
+        if (found is null)
+        {
+            policy = null;
+            return false;
+        }
 
-		policy = found;
-		return true;
-	}
+        policy = found;
+        return true;
+    }
 
-	public SubscriptionPolicyDefinitionResource CreateAzureDefinition(PolicyDefinitionData data)
-	{
-		var policies = subscriptionResource.GetSubscriptionPolicyDefinitions();
-		var result = policies.CreateOrUpdate(WaitUntil.Completed, Guid.NewGuid().ToString(), data).Value;
-		logger.LogInformation("Created policy {policy}", data.DisplayName);
-		return result;
-	}
+    public SubscriptionPolicyDefinitionResource CreateAzureDefinition(PolicyDefinitionData data)
+    {
+        var policies = subscriptionResource.GetSubscriptionPolicyDefinitions();
+        var result = policies.CreateOrUpdate(WaitUntil.Completed, Guid.NewGuid().ToString(), data).Value;
+        logger.LogInformation("Created policy {policy}", data.DisplayName);
+        return result;
+    }
 
 
-	private ExtendedManagedServiceIdentity? extManagedServiceIdentity;
-	public ExtendedManagedServiceIdentity GetManagedIdentity()
-	{
-		if (extManagedServiceIdentity is not null)
-		{
-			return extManagedServiceIdentity;
-		}
+    private ExtendedManagedServiceIdentity? extManagedServiceIdentity;
+    public ExtendedManagedServiceIdentity GetManagedIdentity()
+    {
+        if (extManagedServiceIdentity is not null)
+        {
+            return extManagedServiceIdentity;
+        }
 
-		extManagedServiceIdentity = Retry((attempt) =>
-		{
-			var resources = subscriptionResource.GetGenericResources($"tagName eq '{Constants.AsmInternalResourceId}' and tagValue eq '{Constants.AsmInternalManagedIdentityResourceIdValue}'");
-			foreach (var resource in resources)
-			{
-				if (resource.Data.Tags.TryGetValue(Constants.AsmInternalSolutionId, out var value))
-				{
-					if (value == GetASMInternalSolutionIdValue())
-					{
-						// Data.Properties is null. We have to do a Get so it will be populated in the new res var.
-						var res = resource.Get().Value;
+        extManagedServiceIdentity = Retry((attempt) =>
+        {
+            var resources = subscriptionResource.GetGenericResources($"tagName eq '{Constants.AsmInternalResourceId}' and tagValue eq '{Constants.AsmInternalManagedIdentityResourceIdValue}'");
+            foreach (var resource in resources)
+            {
+                if (resource.Data.Tags.TryGetValue(Constants.AsmInternalSolutionId, out var value))
+                {
+                    if (value == GetASMInternalSolutionIdValue())
+                    {
+                        // Data.Properties is null. We have to do a Get so it will be populated in the new res var.
+                        var res = resource.Get().Value;
 
-						var managedServiceIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
-						var userIdentity = res.Data.Properties.ToObjectFromJson<UserAssignedIdentity>();
-						managedServiceIdentity.UserAssignedIdentities.Add(resource.Id, userIdentity);
-						return new ExtendedManagedServiceIdentity(managedServiceIdentity, resource.Data.Location);
-					}
-				}
-			}
+                        var managedServiceIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
+                        var userIdentity = res.Data.Properties.ToObjectFromJson<UserAssignedIdentity>();
+                        managedServiceIdentity.UserAssignedIdentities.Add(resource.Id, userIdentity);
+                        return new ExtendedManagedServiceIdentity(managedServiceIdentity, resource.Data.Location);
+                    }
+                }
+            }
 
-			if (attempt > 1)
-			{
-				logger.LogDebug("Attempt {attempt} to get managed identity.", attempt);
-			}
+            if (attempt > 1)
+            {
+                logger.LogDebug("Attempt {attempt} to get managed identity.", attempt);
+            }
 
-			return default;
-		}, Constants.DefaultRetryCount);
+            return default;
+        }, Constants.DefaultRetryCount);
 
-		if (extManagedServiceIdentity is null)
-		{
-			throw new UserException("Subscription needs to be initialized. Use the init command to initialize.");
-		}
+        if (extManagedServiceIdentity is null)
+        {
+            throw new UserException("Subscription needs to be initialized. Use the init command to initialize.");
+        }
 
-		return extManagedServiceIdentity;
-	}
+        return extManagedServiceIdentity;
+    }
 
-	private static T? Retry<T>(Func<int, T?> work, int retryCount) where T : class
-	{
-		for (var i = 0; i < retryCount; i++)
-		{
-			var found = work(i + 1);
-			if (found is not null)
-			{
-				return found;
-			}
+    private static T? Retry<T>(Func<int, T?> work, int retryCount) where T : class
+    {
+        for (var i = 0; i < retryCount; i++)
+        {
+            var found = work(i + 1);
+            if (found is not null)
+            {
+                return found;
+            }
 
-			Thread.Sleep(TimeSpan.FromSeconds(i + 1));
-		}
+            Thread.Sleep(TimeSpan.FromSeconds(i + 1));
+        }
 
-		return default;
-	}
+        return default;
+    }
 
-	public ExtendedManagedServiceIdentity CreateManagedIdentityIfMissing(string managedIdentityName, string resourceGroupName, AzureLocation location)
-	{
-		ResourceIdentifier id = new($"/subscriptions/{subscriptionId}/resourcegroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{managedIdentityName}");
+    public ExtendedManagedServiceIdentity CreateManagedIdentityIfMissing(string managedIdentityName, string resourceGroupName, AzureLocation location)
+    {
+        ResourceIdentifier id = new($"/subscriptions/{subscriptionId}/resourcegroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{managedIdentityName}");
 
-		var tags = new Dictionary<string, string>
-		{
-			{ Constants.AsmInternalSolutionId, GetASMInternalSolutionIdValue() },
-			{ Constants.AsmInternalResourceId, Constants.AsmInternalManagedIdentityResourceIdValue }
-		};
+        var tags = new Dictionary<string, string>
+        {
+            { Constants.AsmInternalSolutionId, GetASMInternalSolutionIdValue() },
+            { Constants.AsmInternalResourceId, Constants.AsmInternalManagedIdentityResourceIdValue }
+        };
 
-		UserAssignedIdentity userIdentity;
-		var resources = client.GetGenericResources();
-		if (!resources.Exists(id))
-		{
-			var data = new GenericResourceData(location);
-			tags.ToList().ForEach(data.Tags.Add);
-			var result = resources.CreateOrUpdate(WaitUntil.Completed, id, data);
-			logger.LogInformation("Created managed identity {managedIdentity}", id);
-			userIdentity = result.Value.Data.Properties.ToObjectFromJson<UserAssignedIdentity>();
-		}
-		else
-		{
-			var result = client.GetGenericResource(id).Get().Value;
-			if (result.Data.ApplyTagsIfMissingOrTagValueIfDifferent(tags))
-			{
-				result = resources.CreateOrUpdate(WaitUntil.Completed, id, result.Data).Value;
-			}
+        UserAssignedIdentity userIdentity;
+        var resources = client.GetGenericResources();
+        if (!resources.Exists(id))
+        {
+            var data = new GenericResourceData(location);
+            tags.ToList().ForEach(data.Tags.Add);
+            var result = resources.CreateOrUpdate(WaitUntil.Completed, id, data);
+            logger.LogInformation("Created managed identity {managedIdentity}", id);
+            userIdentity = result.Value.Data.Properties.ToObjectFromJson<UserAssignedIdentity>();
+        }
+        else
+        {
+            var result = client.GetGenericResource(id).Get().Value;
+            if (result.Data.ApplyTagsIfMissingOrTagValueIfDifferent(tags))
+            {
+                result = resources.CreateOrUpdate(WaitUntil.Completed, id, result.Data).Value;
+            }
 
-			userIdentity = result.Data.Properties.ToObjectFromJson<UserAssignedIdentity>();
+            userIdentity = result.Data.Properties.ToObjectFromJson<UserAssignedIdentity>();
 
-		}
+        }
 
-		var managedIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
-		managedIdentity.UserAssignedIdentities.Add(id, userIdentity);
-		return new ExtendedManagedServiceIdentity(managedIdentity, location);
-	}
+        var managedIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
+        managedIdentity.UserAssignedIdentities.Add(id, userIdentity);
+        return new ExtendedManagedServiceIdentity(managedIdentity, location);
+    }
 
-	public void ApplyPolicyAssignmentIfNotExist(ResourceGroupResource group, ExtendedManagedServiceIdentity managedIdentity, SubscriptionPolicyDefinitionResource policy)
-	{
-		var assignments = group.GetPolicyAssignments();
-		if (!assignments.Any(x => x.Data.DisplayName == policy.Data.DisplayName))
-		{
-			var assignment = new PolicyAssignmentData
-			{
-				PolicyDefinitionId = policy.Id,
-				DisplayName = policy.Data.DisplayName,
-				ManagedIdentity = managedIdentity.ManagedServiceIdentity,
-				Location = group.Data.Location,
-			};
-			assignments.CreateOrUpdate(WaitUntil.Completed, policy.Data.DisplayName, assignment);
-			logger.LogInformation("Created policy assignment for '{policy}' in {resourceGroupName}", policy.Data.DisplayName, group.Data.Name);
-		}
-	}
+    public void ApplyPolicyAssignmentIfNotExist(ResourceGroupResource group, ExtendedManagedServiceIdentity managedIdentity, SubscriptionPolicyDefinitionResource policy)
+    {
+        var assignments = group.GetPolicyAssignments();
+        if (!assignments.Any(x => x.Data.DisplayName == policy.Data.DisplayName))
+        {
+            var assignment = new PolicyAssignmentData
+            {
+                PolicyDefinitionId = policy.Id,
+                DisplayName = policy.Data.DisplayName,
+                ManagedIdentity = managedIdentity.ManagedServiceIdentity,
+                Location = group.Data.Location,
+            };
+            assignments.CreateOrUpdate(WaitUntil.Completed, policy.Data.DisplayName, assignment);
+            logger.LogInformation("Created policy assignment for '{policy}' in {resourceGroupName}", policy.Data.DisplayName, group.Data.Name);
+        }
+    }
 
-	public void ApplyTaggingRoleAssignment(ResourceGroupResource group, ExtendedManagedServiceIdentity managedIdentity)
-	{
-		var roleDefinitionId = string.Format(Constants.RoleDefinationIds.SubscriptionTagContributor, subscriptionId);
-		var roleAssignments = client.GetRoleAssignments(group.Id);
+    public void ApplyTaggingRoleAssignment(ResourceGroupResource group, ExtendedManagedServiceIdentity managedIdentity)
+    {
+        var roleDefinitionId = string.Format(Constants.RoleDefinationIds.SubscriptionTagContributor, subscriptionId);
+        var roleAssignments = client.GetRoleAssignments(group.Id);
 
-		if (!roleAssignments.Any(x => x.Data.RoleDefinitionId == roleDefinitionId))
-		{
-			var roleAssignment = new RoleAssignmentCreateOrUpdateContent(
-				roleDefinitionId: new ResourceIdentifier(roleDefinitionId), managedIdentity.ManagedServiceIdentity.GetPrincipalId())
-			{
-				PrincipalType = RoleManagementPrincipalType.ServicePrincipal
-			};
-			roleAssignments.CreateOrUpdate(WaitUntil.Completed, Guid.NewGuid().ToString(), roleAssignment);
+        if (!roleAssignments.Any(x => x.Data.RoleDefinitionId == roleDefinitionId))
+        {
+            var roleAssignment = new RoleAssignmentCreateOrUpdateContent(
+                roleDefinitionId: new ResourceIdentifier(roleDefinitionId), managedIdentity.ManagedServiceIdentity.GetPrincipalId())
+            {
+                PrincipalType = RoleManagementPrincipalType.ServicePrincipal
+            };
+            roleAssignments.CreateOrUpdate(WaitUntil.Completed, Guid.NewGuid().ToString(), roleAssignment);
 
-			logger.LogInformation("Created role assignment for {managedIdentity} in {resourceGroupName}",
-				managedIdentity.ManagedServiceIdentity.GetPrincipalId(),
-				group.Data.Name);
-		}
-	}
+            logger.LogInformation("Created role assignment for {managedIdentity} in {resourceGroupName}",
+                managedIdentity.ManagedServiceIdentity.GetPrincipalId(),
+                group.Data.Name);
+        }
+    }
 
-	public bool TryGetResourceGroupResource(string resourceGroupName, out ResourceGroupResource? resourceGroup)
-	{
-		var resourceGroups = subscriptionResource.GetResourceGroups();
-		resourceGroup = resourceGroups.SingleOrDefault(x => x.Id.ResourceGroupName == resourceGroupName);
-		if (resourceGroup is null)
-		{
-			return false;
-		}
+    public bool TryGetResourceGroupResource(string resourceGroupName, out ResourceGroupResource? resourceGroup)
+    {
+        var resourceGroups = subscriptionResource.GetResourceGroups();
+        resourceGroup = resourceGroups.SingleOrDefault(x => x.Id.ResourceGroupName == resourceGroupName);
+        if (resourceGroup is null)
+        {
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	public ResourceGroupResource CreateResourceGroup(string resourceGroupName, string location, Func<ResourceGroupData, bool> taggingAction)
-	{
-		var resourceGroups = subscriptionResource.GetResourceGroups();
-		var resourceGroupData = new ResourceGroupData(location);
-		taggingAction(resourceGroupData);
-		var result = resourceGroups.CreateOrUpdate(WaitUntil.Completed, resourceGroupName, resourceGroupData);
-		logger.LogInformation("Created resource group {resourceGroupName}", resourceGroupName);
-		return result.Value;
-	}
+    public ResourceGroupResource CreateResourceGroup(string resourceGroupName, string location, Func<ResourceGroupData, bool> taggingAction)
+    {
+        var resourceGroups = subscriptionResource.GetResourceGroups();
+        var resourceGroupData = new ResourceGroupData(location);
+        taggingAction(resourceGroupData);
+        var result = resourceGroups.CreateOrUpdate(WaitUntil.Completed, resourceGroupName, resourceGroupData);
+        logger.LogInformation("Created resource group {resourceGroupName}", resourceGroupName);
+        return result.Value;
+    }
 
-	public bool TryUpdateTaggingIfMissing(ResourceGroupResource group, Func<ResourceGroupData, bool> taggingAction)
-	{
-		if (taggingAction(group.Data))
-		{
-			var resourceGroupName = group.Data.Name;
-			var resourceGroups = subscriptionResource.GetResourceGroups();
-			resourceGroups.CreateOrUpdate(WaitUntil.Completed, resourceGroupName, group.Data);
-			logger.LogInformation("Updated resource group {resourceGroupName}", resourceGroupName);
-			return true;
-		}
+    public bool TryUpdateTaggingIfMissing(ResourceGroupResource group, Func<ResourceGroupData, bool> taggingAction)
+    {
+        if (taggingAction(group.Data))
+        {
+            var resourceGroupName = group.Data.Name;
+            var resourceGroups = subscriptionResource.GetResourceGroups();
+            resourceGroups.CreateOrUpdate(WaitUntil.Completed, resourceGroupName, group.Data);
+            logger.LogInformation("Updated resource group {resourceGroupName}", resourceGroupName);
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public void CreateCanNotDeleteLockIfMissing(ResourceGroupResource resourceGroupResource)
-	{
-		var locks = resourceGroupResource.GetManagementLocks();
-		if (locks.Any(x => x.Data.Level == ManagementLockLevel.CanNotDelete))
-		{
-			return;
-		}
-		var lockData = new ManagementLockData(ManagementLockLevel.CanNotDelete)
-		{
-			Notes = Constants.LockNotes
-		};
-		var lockName = $"{resourceGroupResource.Data.Name}{Constants.LockNameSuffix}";
-		locks.CreateOrUpdate(WaitUntil.Completed, lockName, lockData);
+    public void CreateCanNotDeleteLockIfMissing(ResourceGroupResource resourceGroupResource)
+    {
+        var locks = resourceGroupResource.GetManagementLocks();
+        if (locks.Any(x => x.Data.Level == ManagementLockLevel.CanNotDelete))
+        {
+            return;
+        }
+        var lockData = new ManagementLockData(ManagementLockLevel.CanNotDelete)
+        {
+            Notes = Constants.LockNotes
+        };
+        var lockName = $"{resourceGroupResource.Data.Name}{Constants.LockNameSuffix}";
+        locks.CreateOrUpdate(WaitUntil.Completed, lockName, lockData);
 
-		logger.LogInformation("Created lock {lockName} in {resourceGroupName}", lockName, resourceGroupResource.Data.Name);
-	}
+        logger.LogInformation("Created lock {lockName} in {resourceGroupName}", lockName, resourceGroupResource.Data.Name);
+    }
 
-	public string GetASMInternalSolutionIdValue()
-	{
+    public string GetASMInternalSolutionIdValue()
+    {
 #if DEBUG
-		if (options.DevTest)
-		{
-			return Constants.AsmInternalSolutionIdDevTestValue;
-		}
+        if (options.DevTest)
+        {
+            return Constants.AsmInternalSolutionIdDevTestValue;
+        }
 #endif
 
-		return Constants.AsmInternalSolutionIdValue;
-	}
+        return Constants.AsmInternalSolutionIdValue;
+    }
 
-	public ResourceGroupResource? GetResourceGroup(string resourceGroupName)
-	{
-		var resourceGroups = subscriptionResource.GetResourceGroups();
-		return resourceGroups.SingleOrDefault(x => x.Data.Name == resourceGroupName);
-	}
+    public ResourceGroupResource? GetResourceGroup(string resourceGroupName)
+    {
+        var resourceGroups = subscriptionResource.GetResourceGroups();
+        return resourceGroups.SingleOrDefault(x => x.Data.Name == resourceGroupName);
+    }
 
-	public GenericResource? GetResource(string resourceId)
-	{
-		return Retry((attempt) =>
-		{
-			var page = subscriptionResource.GetGenericResources($"tagName eq '{Constants.AsmResourceId}' and tagValue eq '{resourceId}'");
-			var res = page.SingleOrDefault();
+    public GenericResource? GetResource(string resourceId)
+    {
+        return Retry((attempt) =>
+        {
+            var page = subscriptionResource.GetGenericResources($"tagName eq '{Constants.AsmResourceId}' and tagValue eq '{resourceId}'");
+            var res = page.SingleOrDefault();
 
-			if (attempt > 1)
-			{
-				logger.LogDebug("Attempt {attempt} to get resource with id {resourceId}.", attempt, resourceId);
-			}
+            if (attempt > 1)
+            {
+                logger.LogDebug("Attempt {attempt} to get resource with id {resourceId}.", attempt, resourceId);
+            }
 
-			return res;
+            return res;
 
-		}, Constants.DefaultRetryCount);
-	}
+        }, Constants.DefaultRetryCount);
+    }
 
-	public ResourceIdentifier? GetRoleDefination(string roleName)
-	{
-		var res = subscriptionResource.GetAuthorizationRoleDefinitions().SingleOrDefault(x => x.Data.RoleName == roleName);
-		return res?.Id;
-	}
+    public ResourceIdentifier? GetRoleDefination(string roleName)
+    {
+        var res = subscriptionResource.GetAuthorizationRoleDefinitions().SingleOrDefault(x => x.Data.RoleName == roleName);
+        return res?.Id;
+    }
 
-	public bool ApplyResourceGroupUserRole(
-		ResourceGroupResource resourceGroupResource,
-		ResourceIdentifier roleDefinitionId,
-		Guid principalId,
-		RoleManagementPrincipalType principalType)
-	{
-		var roleAssignments = resourceGroupResource.GetRoleAssignments();
-		if (!roleAssignments.Any(x => x.Data.RoleDefinitionId == roleDefinitionId && x.Data.PrincipalId == principalId))
-		{
-			var roleAssignment = new RoleAssignmentCreateOrUpdateContent(roleDefinitionId, principalId)
-			{
-				PrincipalType = principalType,
-			};
+    public bool ApplyResourceGroupUserRole(
+        ResourceGroupResource resourceGroupResource,
+        ResourceIdentifier roleDefinitionId,
+        Guid principalId,
+        RoleManagementPrincipalType principalType)
+    {
+        var roleAssignments = resourceGroupResource.GetRoleAssignments();
+        if (!roleAssignments.Any(x => x.Data.RoleDefinitionId == roleDefinitionId && x.Data.PrincipalId == principalId))
+        {
+            var roleAssignment = new RoleAssignmentCreateOrUpdateContent(roleDefinitionId, principalId)
+            {
+                PrincipalType = principalType,
+            };
 
-			var result = roleAssignments.CreateOrUpdate(WaitUntil.Completed, Guid.NewGuid().ToString(), roleAssignment);
+            var result = roleAssignments.CreateOrUpdate(WaitUntil.Completed, Guid.NewGuid().ToString(), roleAssignment);
 
-			logger.LogInformation("Created role assignment for {identity} in {resourceGroupName}",
-				principalId,
-				resourceGroupResource.Data.Name);
+            logger.LogInformation("Created role assignment for {identity} in {resourceGroupName}",
+                principalId,
+                resourceGroupResource.Data.Name);
 
-			return true;
-		}
+            return true;
+        }
 
-		logger.LogInformation("Role assignment for {identity} exist in {resourceGroupName}",
-			principalId,
-			resourceGroupResource.Data.Name);
+        logger.LogInformation("Role assignment for {identity} exist in {resourceGroupName}",
+            principalId,
+            resourceGroupResource.Data.Name);
 
-		return false;
-	}
+        return false;
+    }
 
-	public GenericResource[]? GetResources(string solutionId, string environment, string resourceType, string? region, string? component)
-	{
-		var groups = GetResourceGroups(solutionId, environment, region, component);
-		if (groups is not null)
-		{
-			return Retry((attempt) =>
-			{
-				List<GenericResource> genericResources = new();
-				foreach (var group in groups)
-				{
-					var resources = group.GetGenericResources(filter: $"resourceType eq '{resourceType}'").ToArray();
+    public GenericResource[]? GetResources(string solutionId, string environment, string resourceType, string? region, string? component)
+    {
+        var groups = GetResourceGroups(solutionId, environment, region, component);
+        if (groups is not null)
+        {
+            return Retry((attempt) =>
+            {
+                List<GenericResource> genericResources = new();
+                foreach (var group in groups)
+                {
+                    var resources = group.GetGenericResources(filter: $"resourceType eq '{resourceType}'").ToArray();
 
-					if (resources is not null)
-					{
-						genericResources.AddRange(resources);
-					}
-				}
+                    if (resources is not null)
+                    {
+                        genericResources.AddRange(resources);
+                    }
+                }
 
-				if (genericResources.Count > 0)
-				{
-					return genericResources.ToArray();
-				}
+                if (genericResources.Count > 0)
+                {
+                    return genericResources.ToArray();
+                }
 
-				if (attempt > 1)
-				{
-					logger.LogDebug("Attempt {attempt} to get resource type {resourceType}.", attempt, resourceType);
-				}
+                if (attempt > 1)
+                {
+                    logger.LogDebug("Attempt {attempt} to get resource type {resourceType}.", attempt, resourceType);
+                }
 
-				return default;
-			}, Constants.DefaultRetryCount);
-		}
+                return default;
+            }, Constants.DefaultRetryCount);
+        }
 
-		return default;
-	}
+        return default;
+    }
 
-	public ResourceGroupResource[]? GetSolutions()
-	{
-		var resourceGroups = subscriptionResource.GetResourceGroups().GetAll(filter: $"tagName eq '{Constants.AsmInternalSolutionId}' and tagValue eq '{GetASMInternalSolutionIdValue()}'");
-		return resourceGroups.ToArray();
-	}
+    public ResourceGroupResource[]? GetSolutions()
+    {
+        var resourceGroups = subscriptionResource.GetResourceGroups().GetAll(filter: $"tagName eq '{Constants.AsmInternalSolutionId}' and tagValue eq '{GetASMInternalSolutionIdValue()}'");
+        return resourceGroups.ToArray();
+    }
 }

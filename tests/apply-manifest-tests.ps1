@@ -275,3 +275,4 @@ $manifestObj.groups | ForEach-Object {
 }
 
 Pop-Location
+Write-Host "All tests completed successfully." -ForegroundColor Green
