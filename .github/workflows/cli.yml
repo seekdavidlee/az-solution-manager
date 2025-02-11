@@ -3,7 +3,7 @@ on:
     paths-ignore:
       - 'README.md'
 env:
-  CLI_VERSION: '0.3.1-beta'
+  CLI_VERSION: '0.3.2-beta'
 
 jobs:
   setup:
@@ -60,7 +60,7 @@ jobs:
 
       - name: Archive package
         if: ${{ needs.setup.outputs.build_env == 'prod' }}      
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: nuget-package
           path: |
